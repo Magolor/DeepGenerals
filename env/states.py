@@ -3,7 +3,7 @@ import gym
 sys.path.append("../")
 from utils import *
 
-from const import C
+from env.const import C
 
 class GridMap(object):
     def __init__(self, W, H):

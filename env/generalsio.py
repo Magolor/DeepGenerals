@@ -2,7 +2,7 @@ import sys
 import gym
 sys.path.append("../")
 from utils import *
-from states import *
+from env.states import *
 
 class GeneralsMultiAgentEnv(gym.Env):
     metadata = {
