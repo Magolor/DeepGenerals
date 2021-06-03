@@ -59,27 +59,26 @@ def create_kaz_env(**kwargs):
     env = KAZAdapter(num_knights =  0, **kwargs)
     return env
 
-def ActionSpaceToActions(batch, H, W):
+def ActionSpaceToActions(batch, W, H):
     acts = []
     for act in batch.act:
-        h = act % (H*W) // W; w = act % W; half = act // (H*W) % 2; dir = act // (H*W) // 2
-        acts.append(PlayerAction((h,w),C.MOVEABLE_DIRECTIONS[dir],half=half))
+        w = act % (W*H) // H; h = act % H; half = act // (W*H) % 2; dir = act // (W*H) // 2
+        acts.append(PlayerAction((w,h),C.MOVEABLE_DIRECTIONS[dir],half=half))
     return acts
 
 class GeneralsAdapter(GeneralsMultiAgentEnv):
     def __init__(self, **kwargs):
         super(GeneralsAdapter, self).__init__(**kwargs)
-        self.action_space = gym.spaces.discrete.Discrete(8*self.Hmax*self.Wmax)
-        self.observation_space = gym.spaces.box.Box(low=-1,high=1,shape=(C.FEATURES*C.NUM_FRAME,self.Hmax,self.Wmax),dtype=np.float32)
+        self.action_space = gym.spaces.discrete.Discrete(8*self.Wmax*self.Hmax)
+        self.observation_space = gym.spaces.box.Box(low=-1,high=1,shape=(C.FEATURES*C.NUM_FRAME,self.Wmax,self.Hmax),dtype=np.float32)
 
     def reset(self):
         super(GeneralsAdapter, self).reset()
-        self.name_to_id = {name: item+1 for item, name in enumerate(self.agents)}
-        obs, _,_,_ = self.last()
+        obs, _, _, _ = self.last()
         return Batch(obs = obs, agent_id = list(range(1,self.num_players+1)))
 
     def step(self, actions):
-        actions = ActionSpaceToActions(actions, self.Hmax, self.Wmax)
+        actions = ActionSpaceToActions(actions, self.Wmax, self.Hmax)
         super(GeneralsAdapter, self).step(actions)
         obs, reward, done, info = self.last()
         return Batch(obs = [torch.cat([f.serialize() for f in o],dim=0) for o in obs], agent_id = list(range(1,self.num_players+1))), reward, done, info

@@ -166,7 +166,8 @@ class Painter():
         plt.savefig(self.FILE); plt.close()
 
 class Tracker():
-    def __init__(self, title, DIR, registrations=[]):
+    def __init__(self, title, DIR, registrations=None):
+        registrations = list() if registrations is None else registrations
         self.title = title; self.DIR=DIR; Create(DIR); self.curve = {}; self.xlabel = {}; self.key = {}
         self.data_file = os.path.join(self.DIR, "%s.dat"%self.title)
         for key in registrations:

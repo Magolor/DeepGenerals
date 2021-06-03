@@ -79,12 +79,13 @@ def visualize(cfg, model_path=None, random = False):
                 else:
                     obs = np.expand_dims(obs,axis = 0)
                 if random:
-                    action = env.action_space.sample()
+                    actions = [env.action_space.sample() for i in range(cfg.num_agents)]
+                    actions = Batch(act = actions, agent_id = list(range(1,cfg.num_agents+1)))
                 else:
-                    action = policy(Batch(obs=obs, rew = Batch(), info=info)).act[0]
+                    actions = policy(Batch(obs=obs, rew = Batch(), info=info))
                 #env.render()
-                obs, reward, done, info = env.step(action)
-    print("Avg Lifetime: {:.2f}".format(steps/100))
+                obs, reward, done, info = env.step(actions)
+            print("Avg Lifetime: {:.2f}".format(steps/10))
 
 if __name__ == '__main__':
     '''

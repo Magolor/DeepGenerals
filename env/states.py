@@ -1,9 +1,9 @@
 import sys
 import gym
-sys.path.append("../")
 from utils import *
 
 from env.const import C
+from env.ufs import UnionFindSet
 
 class GridMap(object):
     def __init__(self, W, H):
@@ -12,7 +12,7 @@ class GridMap(object):
         self.capitals = []
 
     def data(self):
-        return self.map, self.capitals
+        return self.map.copy(), list(self.capitals)
 
     def AddCapital(self, x, y):
         self.map[x][y] = C.LAND_CAPITAL
@@ -125,9 +125,10 @@ class PlayerAction(object):
         return str((self.src,self.dir,self.half))
 
 class BoardState(object):
-    def __init__(self, true_board_grd, true_board_ctr, true_board_arm, board_obss, turn=0, dead=[]):
+    def __init__(self, true_board_grd, true_board_ctr, true_board_arm, board_obss, turn=0, dead=None):
         self.board_shape = true_board_grd.shape; assert(true_board_ctr.shape==self.board_shape); assert(true_board_arm.shape==self.board_shape)
-        self.num_players = len(board_obss); self.grd = true_board_grd; self.ctr = true_board_ctr; self.arm = true_board_arm; self.obss = board_obss; self.turn = turn; self.dead = dead
+        self.num_players = len(board_obss); self.grd = true_board_grd; self.ctr = true_board_ctr; self.arm = true_board_arm; self.obss = board_obss; self.turn = turn
+        self.dead = list() if dead is None else dead
     
     def copy(self):
         return BoardState(self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obss.copy(),self.turn,self.dead)
@@ -186,7 +187,7 @@ class BoardState(object):
                 for j in range(self.board_shape[1]):
                     if self.ctr[i][j]==player_id+C.BOARD_SELF:      # observing
                         for t in C.OBSERVABLE_DIRECTIONS:
-                            if 0<=i+t[0]<self.board_shape[0] and 0<=j+t[1]<self.board_shape[1] and grd[i+t[0]][j+t[1]]!=C.LAND_MOUNTAIN:
+                            if 0<=i+t[0]<self.board_shape[0] and 0<=j+t[1]<self.board_shape[1] and self.grd[i+t[0]][j+t[1]]!=C.LAND_MOUNTAIN:
                                 self.obss[player_id][i+t[0]][j+t[1]] = C.OBSERVING
         
         # Generate new army
@@ -220,7 +221,7 @@ class UniformArmyGenerator(ArmyGenerator):
         super(UniformArmyGenerator, self).__init__(seed); self.l = l; self.r = r
     
     def __call__(self):
-        return np.random.randint(l,r)
+        return np.random.randint(self.l,self.r)
 
 def NewBoardStateFromMap(map0, army_generator=UniformArmyGenerator(25,101)):
     grd,capitals = map0.data(); num_players = int(torch.sum(torch.eq(torch.tensor(grd),C.LAND_CAPITAL))); player_id = 0
