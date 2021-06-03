@@ -72,8 +72,8 @@ class GeneralsAdapter(GeneralsMultiAgentEnv):
         self.action_space = gym.spaces.discrete.Discrete(8*self.Wmax*self.Hmax)
         self.observation_space = gym.spaces.box.Box(low=-1,high=1,shape=(C.FEATURES*C.NUM_FRAME,self.Wmax,self.Hmax),dtype=np.float32)
 
-    def reset(self):
-        super(GeneralsAdapter, self).reset()
+    def reset(self, replay_id=None):
+        super(GeneralsAdapter, self).reset(replay_id)
         obs, _, _, _ = self.last()
         return Batch(obs = obs, agent_id = list(range(1,self.num_players+1)))
 

@@ -69,7 +69,7 @@ def visualize(cfg, model_path=None, random = False):
         for i in tqdm.trange(10):
             done = False
             info = {}
-            obs = env.reset()
+            obs = env.reset("basic_test_%05d"%i)
             while not done:
                 steps += 1
                 # for multi agent

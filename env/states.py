@@ -125,13 +125,20 @@ class PlayerAction(object):
         return str((self.src,self.dir,self.half))
 
 class BoardState(object):
-    def __init__(self, true_board_grd, true_board_ctr, true_board_arm, board_obss, turn=0, dead=None):
-        self.board_shape = true_board_grd.shape; assert(true_board_ctr.shape==self.board_shape); assert(true_board_arm.shape==self.board_shape)
-        self.num_players = len(board_obss); self.grd = true_board_grd; self.ctr = true_board_ctr; self.arm = true_board_arm; self.obss = board_obss; self.turn = turn
-        self.dead = list() if dead is None else dead
+    def __init__(self, true_board_grd=None, true_board_ctr=None, true_board_arm=None, board_obss=None, turn=0, dead=None):
+        if true_board_grd is not None:
+            self.board_shape = true_board_grd.shape; assert(true_board_ctr.shape==self.board_shape); assert(true_board_arm.shape==self.board_shape)
+            self.num_players = len(board_obss); self.grd = true_board_grd; self.ctr = true_board_ctr; self.arm = true_board_arm; self.obss = board_obss; self.turn = turn
+            self.dead = list() if dead is None else dead
     
+    def serialize(self):
+        return (self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obss.copy(),self.turn,list(self.dead))
+
+    def unserialize(self, board_state):
+        self = BoardState(*board_state); return self
+
     def copy(self):
-        return BoardState(self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obss.copy(),self.turn,self.dead)
+        return BoardState().unserialize(self.serialize())
 
     def GetPlayerState(self, player_id):
         assert(0<=player_id<self.num_players); grd,ctr,arm,obs = self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obss[player_id].copy()

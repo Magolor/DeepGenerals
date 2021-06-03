@@ -29,4 +29,4 @@ class C:
 
     # NN utils
     FEATURES = 13
-    NUM_FRAME = 1
+    NUM_FRAME = 8

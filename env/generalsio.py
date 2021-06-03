@@ -1,5 +1,6 @@
 import sys
 import gym
+import pickle
 sys.path.append("./")
 from utils import *
 from env.states import *
@@ -30,13 +31,16 @@ class GeneralsMultiAgentEnv(gym.Env):
         self.army_generator = army_generator
         self.history = []
         self.step_result = None
+        self.replay_id = None
     
     def step(self, actions):
-        old_observations = [[self.state.GetPlayerState(i)] for i in range(self.num_players)]
+        old_observations = [[h.GetPlayerState(i) for h in self.history[-C.NUM_FRAME:]] for i in range(self.num_players)]
         done = self.state.GetNextState_(actions); self.history.append(self.state.copy())
-        new_observations = [[self.state.GetPlayerState(i)] for i in range(self.num_players)]
+        new_observations = [[h.GetPlayerState(i) for h in self.history[-C.NUM_FRAME:]] for i in range(self.num_players)]
         rewards = [new_observations[i][-1].Score() - old_observations[i][-1].Score() for i in range(self.num_players)]
         self.step_result = (new_observations, rewards, done, {})
+        if done:
+            self.save_replay()
     
     def last(self):
         return self.step_result
@@ -52,7 +56,7 @@ class GeneralsMultiAgentEnv(gym.Env):
     #         rewards = [new_observations[i].Score() - old_observations[i].Score() for i in range(self.num_players)]
     #         info = {}
 
-    def reset(self):
+    def reset(self, replay_id=None):
         self.state = NewBoardStateFromMap(
             NewRandomMap(
                 np.random.choice(self.Ws),
@@ -64,9 +68,14 @@ class GeneralsMultiAgentEnv(gym.Env):
             if self.map is None else self.map,
             army_generator = self.army_generator
         )
-        self.history = [self.state.copy()]
-        self.step_result = ([[self.state.GetPlayerState(i)] for i in range(self.num_players)], None, None, None)
+        self.history = [self.state.copy() for _ in range(C.NUM_FRAME)]
+        self.step_result = ([[h.GetPlayerState(i) for h in self.history[-C.NUM_FRAME:]] for i in range(self.num_players)], None, None, None)
+        self.replay_id = replay_id
         return self.step_result
+
+    def save_replay(self):
+        if self.replay_id is not None:
+            pickle.dump([h.serialize() for h in self.history],open("replays/"+self.replay_id+".replay","wb"))
 
 # class GeneralsSingleAgentEnv(gym.Env):
 #     metadata = {
