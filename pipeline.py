@@ -3,14 +3,13 @@ import tianshou as ts
 from tianshou.utils.log_tools import BasicLogger, SummaryWriter
 import torch, numpy as np
 from policy.policy import get_policy, ExplorationRateDecayPolicy
-from pettingzoo.butterfly import knights_archers_zombies_v7
-from env.adapter import create_knight_env
 from tianshou.data import Batch
 from tool import utils
 import config
 import json
 import tqdm
 from diytrainer import offpolicy_trainer
+from utils import *
 
 
 def train(cfg, log_dir = None):
@@ -89,10 +88,11 @@ def visualize(cfg, model_path=None, random = False):
 
 if __name__ == '__main__':
     '''
-    'CartPole', 'PettingZoo'
+    'CartPole', 'PettingZoo', 'Generals'
     '''
-    name = 'CartPole'
+    name = 'Generals'
     cfg = config.get_config(name)
+    Create('Experiment')
     utils.init(name, 'Experiment')
-    train(cfg, utils.get_fs().get_root_path())
-    #visualize(cfg, model_path='Experiment/Test/checkpoint/best.pt',random=True)
+    # train(cfg, utils.get_fs().get_root_path())
+    visualize(cfg, random=True)

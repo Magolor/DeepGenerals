@@ -6,7 +6,7 @@ from tianshou.data import Batch
 from pettingzoo.butterfly import knights_archers_zombies_v7
 from pettingzoo.utils import wrappers
 
-from env.states import GeneralsMultiAgentEnv
+from env.generalsio import GeneralsMultiAgentEnv
 from env.states import PlayerAction
 from env.const import C
 
@@ -82,11 +82,16 @@ class GeneralsAdapter(GeneralsMultiAgentEnv):
         actions = ActionSpaceToActions(actions, self.Hmax, self.Wmax)
         super(GeneralsAdapter, self).step(actions)
         obs, reward, done, info = self.last()
-        # obs = Batch(obs = obs,agent_id = self.name_to_id[self.agent_selection])
-        return obs,reward,done,info
+        return Batch(obs = [torch.cat([f.serialize() for f in o],dim=0) for o in obs], agent_id = list(range(1,self.num_players+1))), reward, done, info
+
+def create_generals_env():
+    env = GeneralsAdapter()
+    return env
 
 if __name__=="__main__":
-    act = [3, 9, 117]
-    H = 10
-    W = 10
-    print(ActionSpaceToActions(Batch(act = act), H, W))
+    pass
+    # act = [3, 9, 117, 593]
+    # H = 10
+    # W = 10
+    # for act in ActionSpaceToActions(Batch(act = act), H, W):
+    #     print(act)

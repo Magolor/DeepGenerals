@@ -1,6 +1,6 @@
 import sys
 import gym
-sys.path.append("../")
+sys.path.append("./")
 from utils import *
 from env.states import *
 
@@ -13,8 +13,8 @@ class GeneralsMultiAgentEnv(gym.Env):
     def __init__(
         self,
         map0 = None,
-        Ws = [5],
-        Hs = [3],
+        Ws = [6],
+        Hs = [5],
         num_players = 2,
         p_mountain = 0.2,
         p_city = 0.05,

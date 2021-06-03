@@ -55,7 +55,6 @@ def NewRandomMap(W, H, num_players=2, p_mountain=0.2, p_city=0.05):
             break
     return M
 
-@dataclass(frozen=True)
 class PlayerState(object):
     def __init__(self, board_grd, board_ctr, board_arm, board_obs, num_players, turn, armies, dead=False):
         self.board_shape = board_grd.shape; assert(board_obs.shape==self.board_shape); assert(board_ctr.shape==self.board_shape); assert(board_arm.shape==self.board_shape)
@@ -74,10 +73,10 @@ class PlayerState(object):
         map_data.append(torch.tensor(self.arm).float()/A)
         for player in range(self.num_players+2):
             map_data.append(torch.eq(torch.tensor(self.ctr),player).float())
-        stat_data = []
-        stat_data.append(torch.tensor([self.turn%50]).float())
-        stat_data.append(torch.tensor([self.armies[0]]).float())
-        return torch.stack(map_data,dim=0).float(), torch.stack(stat_data,dim=0).float()
+        # stat_data = []
+        # stat_data.append(torch.tensor([self.turn%50]).float())
+        # stat_data.append(torch.tensor([self.armies[0]]).float())
+        return torch.stack(map_data,dim=0).float()
     
     def Score(self):
         return 0
@@ -109,7 +108,6 @@ class PlayerState(object):
     def ArmyControlled(self):
         return sum([self.arm[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])
 
-@dataclass(frozen=True)
 class PlayerAction(object):
     def __init__(self, src, dir, half=False):
         assert(tuple(dir) in C.MOVEABLE_DIRECTIONS)
@@ -124,7 +122,7 @@ class PlayerAction(object):
         )
     
     def __str__(self):
-        return str(tuple(self.src,self.dir,self.half))
+        return str((self.src,self.dir,self.half))
 
 class BoardState(object):
     def __init__(self, true_board_grd, true_board_ctr, true_board_arm, board_obss, turn=0, dead=[]):

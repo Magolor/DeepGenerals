@@ -1,7 +1,8 @@
 import gym
 import torch
 from pettingzoo.butterfly import knights_archers_zombies_v7
-from env.adapter import create_knight_env
+from env.adapter import create_kaz_env
+from env.adapter import create_generals_env
 
 class config():
     '''
@@ -42,6 +43,26 @@ def get_config(task = 'CartPole'):
             'name': 'PettingZoom',
             'env': lambda: create_kaz_env(),
             'train_env_num': 5,
+            'test_env_num': 1,
+            'num_agents':   2,
+
+            # training related
+            'buffer_size': 10000,
+            'max_epoch': 30,
+            'step_per_epoch': 1000,
+            'step_per_collect': 500,
+            'episode_per_test': 5,
+            'batch_size': 16,
+            'update_per_step': 0.2,
+            'algo': 'dqn',
+            'device': 'cuda:1' if torch.cuda.is_available() else 'cpu'
+        }
+    elif task == 'Generals':
+        d = {
+            # environment related
+            'name': 'Generals',
+            'env': lambda: create_generals_env(),
+            'train_env_num': 1,
             'test_env_num': 1,
             'num_agents':   2,
 

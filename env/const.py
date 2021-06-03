@@ -1,7 +1,3 @@
-from dataclasses import dataclass
-
-
-@dataclass(frozen=True)
 class C:
     # grd
     LAND_FOG = 0
@@ -32,5 +28,5 @@ class C:
     OBSERVABLE_DIRECTIONS = ((-1,-1),(-1,0),(-1,1),(0,-1),(0,0),(1,1),(1,-1),(1,0),(1,1))
 
     # NN utils
-    FEATURES = 10
-    NUM_FRAME = 8
+    FEATURES = 13
+    NUM_FRAME = 1
