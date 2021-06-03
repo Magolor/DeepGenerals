@@ -40,7 +40,7 @@ def get_config(task = 'CartPole'):
     elif task == 'PettingZoo':
         d = {
             # environment related
-            'name': 'PettingZoom',
+            'name': 'PettingZoo',
             'env': lambda: create_kaz_env(),
             'train_env_num': 5,
             'test_env_num': 1,

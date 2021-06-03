@@ -5,7 +5,7 @@ from torch import nn
 from tianshou.data import Batch
 from pettingzoo.butterfly import knights_archers_zombies_v7
 from pettingzoo.utils import wrappers
-
+from gym.spaces import Discrete,MultiDiscrete
 from env.generalsio import GeneralsMultiAgentEnv
 from env.states import PlayerAction
 from env.const import C
