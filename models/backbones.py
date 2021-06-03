@@ -105,6 +105,7 @@ class FCNBackbone(backbone):
         self.channels = channels + 8 * 32
 
     def forward(self, x):
+        x = self.preprocess(x, self.get_device())
         x = self.stem(x)
         x = self.stage2(self.cbr(self.stage1(x)))
         return x

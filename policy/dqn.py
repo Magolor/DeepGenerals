@@ -5,7 +5,7 @@ import env.adapter as adapter
 from torch.optim import SGD, Adam
 from models import actionHead, backbones, model
 import tianshou as ts
-#from diymapolicy import MultiAgentPolicyManager
+from policy.mapolicy import MultiAgentPolicyManager
 
 
 def get_dqn_policy(cfg, input_shape, action_space, name = 'CartPole'):
@@ -24,7 +24,7 @@ def get_dqn_policy(cfg, input_shape, action_space, name = 'CartPole'):
             policy = ts.policy.DQNPolicy(net, optim, estimation_step=20, target_update_freq=200)
             return policy
         # multiagent
-        policy = ts.policy.MultiAgentPolicyManager(
+        policy = MultiAgentPolicyManager(
             [single_policy() for _ in range(cfg.num_agents)]
         )
 
@@ -37,7 +37,7 @@ def get_dqn_policy(cfg, input_shape, action_space, name = 'CartPole'):
             policy = ts.policy.DQNPolicy(net, optim, estimation_step=20, target_update_freq=200)
             return policy
             # multiagent
-        policy = ts.policy.MultiAgentPolicyManager(
+        policy = MultiAgentPolicyManager(
                 [single_policy() for _ in range(cfg.num_agents)]
         )
     return policy

@@ -75,7 +75,7 @@ def get_config(task = 'CartPole'):
             'batch_size': 16,
             'update_per_step': 0.2,
             'algo': 'dqn',
-            'device': 'cuda:1' if torch.cuda.is_available() else 'cpu'
+            'device': 'cuda' if torch.cuda.is_available() else 'cpu'
         }
 
     return config(d)
