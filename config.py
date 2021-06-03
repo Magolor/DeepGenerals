@@ -40,7 +40,7 @@ def get_config(task = 'CartPole'):
         d = {
             # environment related
             'name': 'PettingZoom',
-            'env': lambda: create_knight_env(),
+            'env': lambda: create_kaz_env(),
             'train_env_num': 5,
             'test_env_num': 1,
             'num_agents':   2,

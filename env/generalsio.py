@@ -23,19 +23,34 @@ class GeneralsMultiAgentEnv(gym.Env):
         super(GeneralsEnv, self).__init__()
         self.map = map0; self.state = None
         self.Ws = Ws; self.Hs = Hs
+        self.Wmax = max(Ws); self.Hmax = max(Hs)
         self.num_players = num_players
         self.p_mountain = p_mountain
         self.p_city = p_city
         self.army_generator = army_generator
         self.history = []
+        self.step_result = None
     
     def step(self, actions):
-        old_observations = [self.state.GetPlayerState(i) for i in range(self.num_players)]
+        old_observations = [[self.state.GetPlayerState(i)] for i in range(self.num_players)]
         done = self.state.GetNextState_(actions); self.history.append(self.state.copy())
-        new_observations = [new_state.GetPlayerState(i) for i in range(self.num_players)]
+        new_observations = [[self.state.GetPlayerState(i)] for i in range(self.num_players)]
         rewards = [new_observations[i].Score() - old_observations[i].Score() for i in range(self.num_players)]
-        info = {}
-        return new_observations, rewards, done, info
+        self.step_result = (new_observations, rewards, done, {})
+    
+    def last(self):
+        return self.step_result
+
+    # def step(self, action):
+    #     self.actions.append(action); self.agent_selection = (self.agent_selection+1)%self.num_players
+    #     while self.agent_selection in self.state.dead:
+    #         self.actions.append(None); self.agent_selection = (self.agent_selection+1)%self.num_players
+    #     if len(self.actions) == self.num_players:
+    #         old_observations = [self.state.GetPlayerState(i) for i in range(self.num_players)]
+    #         done = self.state.GetNextState_(self.actions); self.history.append(self.state.copy())
+    #         new_observations = [new_state.GetPlayerState(i) for i in range(self.num_players)]
+    #         rewards = [new_observations[i].Score() - old_observations[i].Score() for i in range(self.num_players)]
+    #         info = {}
 
     def reset(self):
         self.state = NewBoardStateFromMap(
@@ -50,7 +65,8 @@ class GeneralsMultiAgentEnv(gym.Env):
             army_generator = self.army_generator
         )
         self.history = [self.state.copy()]
-        return [self.state.GetPlayerState(i) for i in range(self.num_players)]
+        self.step_result = ([[self.state.GetPlayerState(i)] for i in range(self.num_players)], None, None, None)
+        return self.step_result
 
 class GeneralsSingleAgentEnv(gym.Env):
     metadata = {

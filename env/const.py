@@ -30,3 +30,7 @@ class C:
 
     MOVEABLE_DIRECTIONS = ((-1,0),(0,1),(1,0),(0,-1))
     OBSERVABLE_DIRECTIONS = ((-1,-1),(-1,0),(-1,1),(0,-1),(0,0),(1,1),(1,-1),(1,0),(1,1))
+
+    # NN utils
+    FEATURES = 10
+    NUM_FRAME = 8

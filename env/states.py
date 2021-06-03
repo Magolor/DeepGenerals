@@ -122,6 +122,9 @@ class PlayerAction(object):
         and (state.grd[self.dst[0]][self.dst[1]]!=C.LAND_MOUNTAIN)                              # not moving to mountain
         and (state.arm[self.src[0]][self.src[1]]>1)                                             # have army to move
         )
+    
+    def __str__(self):
+        return str(tuple(self.src,self.dir,self.half))
 
 class BoardState(object):
     def __init__(self, true_board_grd, true_board_ctr, true_board_arm, board_obss, turn=0, dead=[]):
@@ -148,16 +151,16 @@ class BoardState(object):
                     arm[i][j] = 0
         return PlayerState(grd,ctr,arm,obs,self.num_players,self.turn,armies,player_id in self.dead)
 
-    def GetNextState_(self, moves):
-        self.turn += 1; assert(len(moves)==self.num_players)
+    def GetNextState_(self, actions):
+        self.turn += 1; assert(len(actions)==self.num_players)
         # Taking turns to move
-        for player_id,move in enumerate(moves):
-            if (player_id in self.dead) or (move is None):
+        for player_id,action in enumerate(actions):
+            if (player_id in self.dead) or (action is None):
                 continue
-            if not move.IsAvailableIn(self, player_id):
+            if not action.IsAvailableIn(self, player_id):
                 continue
-            s = move.src; e = move.dst
-            army = self.arm[s[0]][s[1]]-int(np.ceil(self.arm[s[0]][s[1]]/2.) if move.half else 1)
+            s = action.src; e = action.dst
+            army = self.arm[s[0]][s[1]]-int(np.ceil(self.arm[s[0]][s[1]]/2.) if action.half else 1)
             self.arm[s[0]][s[1]] -= army
             if self.ctr[e[0]][e[1]]==player_id+C.BOARD_SELF:        # move within ones territory
                 self.arm[e[0]][e[1]] += army
