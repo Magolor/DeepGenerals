@@ -102,7 +102,7 @@ class FCNBackbone(backbone):
         channels = 128 + 4*32
         self.cbr = CBR(channels, channels)
         self.stage2 = _DenseBlock(8,channels,4,32,0,True)
-        self.out_channels = channels + 8 * 32
+        self.channels = channels + 8 * 32
 
     def forward(self, x):
         x = self.stem(x)
@@ -113,7 +113,7 @@ class FCNBackbone(backbone):
         return self.cbr.conv.weight.device
 
     def out_channels(self):
-        return self.out_channels
+        return self.channels
 
     def out_stride(self):
         return 1

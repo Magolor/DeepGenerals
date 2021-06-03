@@ -62,7 +62,7 @@ def get_config(task = 'CartPole'):
             # environment related
             'name': 'Generals',
             'env': lambda: create_generals_env(),
-            'train_env_num': 1,
+            'train_env_num': 5,
             'test_env_num': 1,
             'num_agents':   2,
 

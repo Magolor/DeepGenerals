@@ -217,10 +217,10 @@ class ArmyGenerator(object):
     def __init__(self, seed=None):
         self.seed = seed; np.random.seed(seed)
 
-    def reset():
+    def reset(self):
         np.random.seed(self.seed)
     
-    def seed(seed=None):
+    def seed(self, seed=None):
         self.seed = seed; np.random.seed(seed)
 
 class UniformArmyGenerator(ArmyGenerator):
