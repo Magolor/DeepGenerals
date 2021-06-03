@@ -102,7 +102,7 @@ class MultiAgentPolicyManager(BasePolicy):
         """
         results: List[Tuple[bool, np.ndarray, Batch,
                             Union[np.ndarray, Batch], Batch]] = []
-        
+        assert len(batch) == 1
         for policy in self.policies:
             # This part of code is difficult to understand.
             # Let's follow an example with two agents
@@ -116,7 +116,7 @@ class MultiAgentPolicyManager(BasePolicy):
                 # (has_data, agent_index, out, act, state)
                 results.append((False, np.array([-1]), Batch(), Batch(), Batch()))
                 continue
-            batch = Batch(
+            new_batch = Batch(
                 act = batch.act,
                 done = batch.done,
                 info = batch.info,
@@ -128,7 +128,7 @@ class MultiAgentPolicyManager(BasePolicy):
                     agent_id = batch.obs[0].agent_id,
                 )
             )
-            tmp_batch = batch[agent_index]
+            tmp_batch = new_batch[agent_index]
             if isinstance(tmp_batch.rew, np.ndarray):
                 # reward can be empty Batch (after initial reset) or nparray.
                 tmp_batch.rew = tmp_batch.rew[:, policy.agent_id - 1]
@@ -143,6 +143,7 @@ class MultiAgentPolicyManager(BasePolicy):
         holder = Batch.cat([{"act": act} for
                             (has_data, agent_index, out, act, each_state)
                             in results if has_data])
+        holder.act = holder.act[np.newaxis,:]
         state_dict, out_dict = {}, {}
         for policy, (has_data, agent_index, out, act, state) in zip(
                 self.policies, results):
