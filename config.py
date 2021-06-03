@@ -22,37 +22,37 @@ def get_config(task = 'CartPole'):
             # environment related
             'name':             'CartPole',
             'env':              lambda :gym.make('CartPole-v0'),
-            'train_env_num':    10,
-            'test_env_num':     2,
+            'train_env_num':    50,
+            'test_env_num':     10,
 
             # training related
             'buffer_size':      10000,
-            'max_epoch':        10,
-            'step_per_epoch':   10000,
-            'step_per_collect': 50,
+            'max_epoch':        30,
+            'step_per_epoch':   1000,
+            'step_per_collect': 500,
             'episode_per_test': 100,
-            'batch_size':       64,
-            'update_per_step':  0.3,
-            'algo':             'dqn',
+            'batch_size':       256,
+            'update_per_step':  0.1,
+            'algo':             'ppo',
             'device':           'cuda:1' if torch.cuda.is_available() else 'cpu'
         }
-    elif task == 'PettingZoom':
+    elif task == 'PettingZoo':
         d = {
             # environment related
             'name': 'PettingZoom',
             'env': lambda: create_knight_env(),
-            'train_env_num': 1,
+            'train_env_num': 5,
             'test_env_num': 1,
             'num_agents':   2,
 
             # training related
-            'buffer_size': 1000,
-            'max_epoch': 10,
-            'step_per_epoch': 50,
-            'step_per_collect': 50,
-            'episode_per_test': 1,
-            'batch_size': 64,
-            'update_per_step': 0.3,
+            'buffer_size': 10000,
+            'max_epoch': 30,
+            'step_per_epoch': 1000,
+            'step_per_collect': 500,
+            'episode_per_test': 5,
+            'batch_size': 16,
+            'update_per_step': 0.2,
             'algo': 'dqn',
             'device': 'cuda:1' if torch.cuda.is_available() else 'cpu'
         }

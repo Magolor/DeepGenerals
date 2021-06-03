@@ -9,6 +9,8 @@ from tianshou.data import Batch
 from tool import utils
 import config
 import json
+import tqdm
+from diytrainer import offpolicy_trainer
 
 
 def train(cfg, log_dir = None):
@@ -33,7 +35,7 @@ def train(cfg, log_dir = None):
     print("Done!")
     # create a trainer
     print("Start training!")
-    result = ts.trainer.offpolicy_trainer(
+    result = offpolicy_trainer(
         policy = policy,
         train_collector = train_collector,
         test_collector = test_collector,
@@ -56,35 +58,41 @@ def train(cfg, log_dir = None):
 
 
 def visualize(cfg, model_path=None, random = False):
-    env = cfg.env()
-    if not random:
-        if model_path is None:
-            model_path = cfg.name + '.pt'
-        policy = torch.load(model_path)
-        policy.eval()
+    with torch.no_grad():
+        env = cfg.env()
+        if not random:
+            if model_path is None:
+                model_path = cfg.name + '.pt'
+            policy = torch.load(model_path, cfg.device)
+            policy.eval()
 
-    for i in range(100):
-        done = False
-        info = {}
-        obs = env.reset()
-        while not done:
-            # for multi agent
-            if isinstance(obs, Batch):
-                obs = obs.obs
-            obs = np.expand_dims(obs,axis = 0)
-            if random:
-                action = env.action_space.sample()
-            else:
-                action = policy(Batch(obs=obs, info=info)).act[0]
-            env.render()
-            obs, reward, done, info = env.step(action)
+        steps = 0
+        for i in tqdm.trange(10):
+            done = False
+            info = {}
+            obs = env.reset()
+            while not done:
+                steps += 1
+                # for multi agent
+                if isinstance(obs, Batch):
+                    # equivalent to as (C, H, W)->(1, C, H, W)
+                    obs = Batch.stack([obs])
+                else:
+                    obs = np.expand_dims(obs,axis = 0)
+                if random:
+                    action = env.action_space.sample()
+                else:
+                    action = policy(Batch(obs=obs, rew = Batch(), info=info)).act[0]
+                #env.render()
+                obs, reward, done, info = env.step(action)
+    print("Avg Lifetime: {:.2f}".format(steps/100))
 
 if __name__ == '__main__':
     '''
-    'CartPole', 'PettingZoom'
+    'CartPole', 'PettingZoo'
     '''
-    cfg = config.get_config('PettingZoom')
-    utils.init('Test', 'Experiment')
+    name = 'CartPole'
+    cfg = config.get_config(name)
+    utils.init(name, 'Experiment')
     train(cfg, utils.get_fs().get_root_path())
-
-    #visualize(cfg, random=True)
+    #visualize(cfg, model_path='Experiment/Test/checkpoint/best.pt',random=True)

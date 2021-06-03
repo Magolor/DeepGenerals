@@ -14,13 +14,13 @@ def get_dqn_policy(cfg, input_shape, action_space, name = 'CartPole'):
         optim = Adam(net.parameters(),lr=1e-4,weight_decay=1e-4)
         policy = ts.policy.DQNPolicy(net, optim, estimation_step=3,target_update_freq=320)
 
-    if name == 'PettingZoom':
+    if name == 'PettingZoo':
         def single_policy():
             backbone = backbones.ResnetBackbone(flatten=True, stride=32, channel_last=True)
             head = actionHead.mlpHead((backbone.out_channels(),-1,-1), action_space,layer=0)
             net = model.AdaptNetwork(head, backbone).to(cfg.device)
-            optim = Adam(net.parameters(), lr=1e-4, weight_decay=1e-4)
-            policy = ts.policy.DQNPolicy(net, optim, estimation_step=5, target_update_freq=320)
+            optim = Adam(net.parameters(), lr=1e-3, weight_decay=1e-4)
+            policy = ts.policy.DQNPolicy(net, optim, estimation_step=20, target_update_freq=200)
             return policy
         # multiagent
         policy = ts.policy.MultiAgentPolicyManager(
