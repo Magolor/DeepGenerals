@@ -26,5 +26,18 @@ def get_dqn_policy(cfg, input_shape, action_space, name = 'CartPole'):
         policy = ts.policy.MultiAgentPolicyManager(
             [single_policy() for _ in range(cfg.num_agents)]
         )
+
+    if name == 'Generals':
+        def single_policy():
+            backbone = backbones.FCNBackbone(input_shape[0])
+            head = actionHead.spacePreservedHead((backbone.out_channels(), -1, -1), action_space)
+            net = model.AdaptNetwork(head, backbone).to(cfg.device)
+            optim = Adam(net.parameters(), lr=1e-3, weight_decay=1e-4)
+            policy = ts.policy.DQNPolicy(net, optim, estimation_step=20, target_update_freq=200)
+            return policy
+            # multiagent
+        policy = ts.policy.MultiAgentPolicyManager(
+                [single_policy() for _ in range(cfg.num_agents)]
+        )
     return policy
 

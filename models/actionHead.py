@@ -29,7 +29,7 @@ class spacePreservedHead(actionHead):
        (B, C, H, W) -> (B, action_space, H, W) -> (B, action_space * H * W)
     '''
     def __init__(self,  input_shape, action_space):
-        super(actionHead, self).__init__(input_shape, action_space)
+        super(actionHead, self).__init__(input_shape, action_space//(input_shape[1]*input_shape[2]))
         self.cls = nn.Conv2d(input_shape[0], self.action_space,1)
 
     def forward(self, x, **kwargs):

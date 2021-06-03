@@ -2,9 +2,10 @@ import torch.distributions as dist
 import seaborn as sns
 import matplotlib.pyplot as plt
 import torch
+from models.WindowAttention import SelfAttnBlock
 
-sampler = dist.Gumbel(loc =0 ,scale=1)
-data = sampler.sample((1000,))
-
-sns.distplot(data.numpy(),kde=False)
-plt.show()
+model = SelfAttnBlock(128, (10,10), 32).to('cuda:1')
+print(model)
+x = torch.randn((1, 128, 80, 80)).to('cuda:1')
+out = model(x)
+print(out.size())

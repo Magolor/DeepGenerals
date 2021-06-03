@@ -6,6 +6,9 @@ from timm.models.resnet import resnet34
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
 from torchvision.models.segmentation.segmentation import IntermediateLayerGetter
 import torch.nn.functional as F
+from torchvision.models.densenet import _DenseBlock,_Transition
+from models.WindowAttention import SelfAttnBlock
+from models.pixelmlp import PixelMlp
 
 
 class backbone(nn.Module):
@@ -60,6 +63,7 @@ class DenseBackbone(backbone):
             x = torch.flatten(x, start_dim=1)
         return x
 
+
 class ResnetBackbone(backbone):
     def __init__(self, flatten, stride=8, channel_last=True):
         super(ResnetBackbone, self).__init__(flatten, channel_last)
@@ -81,20 +85,53 @@ class ResnetBackbone(backbone):
             x = torch.flatten(x, start_dim=1)
         return x
 
+class CBR(nn.Sequential):
+    def __init__(self, in_channels, out_channels):
+        super(CBR, self).__init__()
+        self.add_module('norm', nn.BatchNorm2d(in_channels))
+        self.add_module('relu', nn.ReLU(inplace=True))
+        self.add_module('conv', nn.Conv2d(in_channels, out_channels,
+                                          kernel_size=1, stride=1, bias=False))
+
+
+class FCNBackbone(backbone):
+    def __init__(self, in_channels):
+        super(FCNBackbone, self).__init__(False, False)
+        self.stem = PixelMlp(in_channels,128, 128)
+        self.stage1 = _DenseBlock(4, 128, 4 ,32 ,0 ,True)
+        channels = 128 + 4*32
+        self.cbr = CBR(channels, channels)
+        self.stage2 = _DenseBlock(8,channels,4,32,0,True)
+        self.out_channels = channels + 8 * 32
+
+    def forward(self, x):
+        x = self.stem(x)
+        x = self.stage2(self.cbr(self.stage1(x)))
+        return x
+
+    def get_device(self):
+        return self.cbr.conv.weight.device
+
+    def out_channels(self):
+        return self.out_channels
+
+    def out_stride(self):
+        return 1
+
 class SelfAttnBackbone(backbone):
     '''
         Fully preserve spacial information
         (B, C, H, W) -> (B, C', H, W).
     '''
-    def __init__(self, stride):
+    def __init__(self, in_channels):
         super(SelfAttnBackbone, self).__init__()
-        pass
+        self.stem = PixelMlp(in_channels, )
 
 
 
 if __name__ == '__main__':
-    model = ResnetBackbone(False,32)
+    model = SelfAttnBlock(128,(10,10),32)
     print(model)
-    x = torch.randn((1,3,64,64))
+    x = torch.randn((1,3,80,80))
     out = model(x)
     print(out.size())
