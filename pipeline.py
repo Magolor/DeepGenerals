@@ -85,7 +85,7 @@ def visualize(cfg, model_path=None, random = False):
                     actions = policy(Batch(obs=obs, rew = Batch(), info=info))
                 #env.render()
                 obs, reward, done, info = env.step(actions)
-            print("Avg Lifetime: {:.2f}".format(steps/10))
+            print("Avg Lifetime: {:.2f}".format(steps/(i+1)))
 
 if __name__ == '__main__':
     '''
