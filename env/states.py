@@ -61,7 +61,7 @@ class PlayerState(object):
         self.grd = board_grd; self.obs = board_obs; self.ctr = board_ctr; self.arm = board_arm; self.num_players = num_players; self.turn = turn; self.armies = armies; self.dead=dead
     
     def copy(self):
-        return PlayerState(self.grd.copy(),self.obs.copy(),self.ctr.copy(),self.arm.copy(),self.num_players,self.turn,self.armies,self.dead)
+        return PlayerState(self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obs.copy(),self.num_players,self.turn,self.armies,self.dead)
     
     def serialize(self):
         # customize !!!
