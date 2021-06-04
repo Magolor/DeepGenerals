@@ -41,7 +41,7 @@ class GridMap(object):
         return True
 
     def pad_to(self, W, H):
-        new_map = np.ones((W,H),dtype=np.int)
+        new_map = np.ones((W,H),dtype=np.int) * C.LAND_MOUNTAIN
         new_map[:self.W,:self.H] = self.map.copy()
         self.W = W; self.H = H; self.map = new_map
 

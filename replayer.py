@@ -194,7 +194,7 @@ def Replay(replay_id, offset = C.NUM_FRAME-1, framerate = 10):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", dest="id", help="Replay ID", type=str, default="basic_test_00000")
+    parser.add_argument("-i", dest="id", help="Replay ID", type=str, default="basic_test_00002")
     parser.add_argument("-f", dest="framerate", help="Turn per Sec", type=int, default=20)
     args = parser.parse_args()
     Replay(args.id, framerate=args.framerate)
