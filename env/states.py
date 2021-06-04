@@ -196,7 +196,6 @@ class BoardState(object):
                 self.arm[e[0]][e[1]] += army
             elif army > self.arm[e[0]][e[1]]:                       # win the battle, captures a land
                 self.arm[e[0]][e[1]] = army-self.arm[e[0]][e[1]]
-                self.ctr[e[0]][e[1]] = player_id+C.BOARD_SELF
                 if self.grd[e[0]][e[1]]==C.LAND_CAPITAL:            # captures a capital
                     self.grd[e[0]][e[1]] = C.LAND_CITY
                     enemy_id = int(self.ctr[e[0]][e[1]])-C.BOARD_SELF
@@ -205,6 +204,7 @@ class BoardState(object):
                             if self.ctr[i][j]==enemy_id+C.BOARD_SELF:
                                 self.arm[i][j] = 1; self.ctr[i][j] = player_id+C.BOARD_SELF
                     self.dead.append(enemy_id)
+                self.ctr[e[0]][e[1]] = player_id+C.BOARD_SELF
             else:                                                   # lose the battle
                 self.arm[e[0]][e[1]] -= army
 
