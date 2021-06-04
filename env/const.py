@@ -25,7 +25,7 @@ class C:
         return g==LAND_CITY or g==LAND_CAPITAL
 
     MOVEABLE_DIRECTIONS = ((-1,0),(0,1),(1,0),(0,-1))
-    OBSERVABLE_DIRECTIONS = ((-1,-1),(-1,0),(-1,1),(0,-1),(0,0),(1,1),(1,-1),(1,0),(1,1))
+    OBSERVABLE_DIRECTIONS = ((-1,-1),(-1,0),(-1,1),(0,-1),(0,0),(0,1),(1,-1),(1,0),(1,1))
 
     # NN utils
     FEATURES = 13
