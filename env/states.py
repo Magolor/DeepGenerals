@@ -68,8 +68,8 @@ class PlayerState(object):
     def copy(self):
         return PlayerState(self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obs.copy(),self.num_players,self.turn,list(self.armies),self.dead)
     
+    # TODO: feature design
     def serialize(self):
-        # customize !!!
         map_data = []; A = float(sum(self.armies))
         for grd_type in range(5):
             map_data.append(torch.eq(torch.tensor(self.grd),grd_type).float())
@@ -78,10 +78,11 @@ class PlayerState(object):
         map_data.append(torch.tensor(self.arm).float()/A)
         for player in range(self.num_players+2):
             map_data.append(torch.eq(torch.tensor(self.ctr),player).float())
-        # stat_data = []
-        # stat_data.append(torch.tensor([self.turn%50]).float())
-        # stat_data.append(torch.tensor([self.armies[0]]).float())
-        return torch.stack(map_data,dim=0).float()
+        stat_data = []
+        stat_data.append(torch.ones_like(map_data[0]) * float(self.turn%50))
+        for arm in self.armies:
+            stat_data.append(torch.ones_like(map_data[0]) * arm)
+        return torch.stack(map_data + stat_data,dim=0).float()
     
     def Score(self):
         return 0
