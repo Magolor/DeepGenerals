@@ -1,4 +1,5 @@
 import numpy as np
+import torch
 from typing import Any, Dict, List, Tuple, Union, Optional
 
 from tianshou.policy import BasePolicy
@@ -40,9 +41,10 @@ class MultiAgentPolicyManager(BasePolicy):
 
     def adapt_buffer(self, buffer, indice, agent_index):
         new_buffer =  deepcopy(buffer)
-        new_buffer[indice].obs.obs = buffer[indice].obs.obs[:, agent_index]
-        new_buffer[indice].act = buffer[indice].act[:, agent_index]
-        new_buffer[indice].rew = buffer[indice].rew[:, agent_index]
+        new_buffer._meta['obs'].obs = buffer.obs.obs[:, agent_index]
+        new_buffer._meta['act'] =    buffer.act[:, agent_index]
+        new_buffer._meta['rew'] =    buffer.rew[:, agent_index]
+        new_buffer._meta['obs_next'].obs = buffer.obs_next.obs[:, agent_index]
         return new_buffer
 
 
@@ -65,7 +67,8 @@ class MultiAgentPolicyManager(BasePolicy):
         return Batch(results)
 
     def get_agent_batch(self, batch, agent_id):
-        obs = batch.obs.obs[:,agent_id]
+        obs = batch.obs if not hasattr(batch.obs, 'obs') else batch.obs.obs[:, agent_id]
+        obs_next = batch.obs_next if not hasattr(batch.obs_next, 'obs') else batch.obs_next.obs[:, agent_id]
         #if self.act is
         act = batch.act[:, agent_id] if isinstance(batch.act, np.ndarray) else batch.act
         rew = batch.rew[:, agent_id] if isinstance(batch.rew, np.ndarray) else batch.rew
@@ -75,7 +78,8 @@ class MultiAgentPolicyManager(BasePolicy):
             'info': batch.info,
             'policy': batch.policy,
             'rew': rew,
-            'act': act
+            'act': act,
+            'obs_next': obs_next
         })
         return net_batch
 
@@ -172,8 +176,8 @@ class MultiAgentPolicyManager(BasePolicy):
         for policy in self.policies:
             #data = batch[f"agent_{policy.agent_id}"]
             #if not data.is_empty():
-            data = self.get_agent_batch(batch, policy.agent_id-1)
-            out = policy.learn(batch=data, **kwargs)
+            #data = self.get_agent_batch(batch, policy.agent_id-1)
+            out = policy.learn(batch=batch["agent_" + str(policy.agent_id) ], **kwargs)
             for k, v in out.items():
                 results["agent_" + str(policy.agent_id) + "/" + k] = v
         return results

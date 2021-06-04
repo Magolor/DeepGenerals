@@ -14,8 +14,8 @@ class GeneralsMultiAgentEnv(gym.Env):
     def __init__(
         self,
         map0 = None,
-        Ws = [6,5],
-        Hs = [5,4],
+        Ws = [6,5,4,3],
+        Hs = [5,4,3],
         num_players = 2,
         p_mountain = 0.2,
         p_city = 0.05,
