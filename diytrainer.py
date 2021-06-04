@@ -105,7 +105,7 @@ def offpolicy_trainer(
                 last_len = result['len'] if 'len' in result else last_len
                 data = {
                     "env_step": str(env_step),
-                    "rew": f"{last_rew:.2f}",
+                    "rew": f"{last_rew:.4f}",
                     "len": str(int(last_len)),
                     "n/ep": str(int(result["n/ep"])),
                     "n/st": str(int(result["n/st"])),
@@ -134,8 +134,8 @@ def offpolicy_trainer(
                         data[k] = f"{losses[k]:.3f}"
                         describe += k + f': {data[k]}'
                     logger.log_update_data(losses, gradient_step)
+                    losses.update({'rew': data['rew']})
                     t.set_postfix(losses)
-                    t.set_postfix({'rew': data['rew']})
             if t.n <= t.total:
                 t.update()
         # test

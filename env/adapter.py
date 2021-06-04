@@ -84,7 +84,7 @@ class GeneralsAdapter(GeneralsMultiAgentEnv):
         actions = ActionSpaceToActions(actions, self.Wmax, self.Hmax)
         super(GeneralsAdapter, self).step(actions)
         obs, reward, done, info = self.last()
-        return Batch(obs = [torch.cat([f.serialize() for f in o],dim=0) for o in obs], agent_id = list(range(1,self.num_players+1)), wft = 0), reward, done, info
+        return Batch(obs = [torch.cat([f.serialize() for f in o],dim=0) for o in obs], agent_id = list(range(1,self.num_players+1)), wtf = 0), reward, done, info
 
 def create_generals_env(name = "default", auto_replay_id = True):
     env = GeneralsAdapter(name = name, auto_replay_id = auto_replay_id)

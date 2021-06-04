@@ -16,8 +16,8 @@ def train(cfg, log_dir = None):
     # get environment
     print(HIGHLIGHT("Create Virtual Environment:"))
     env = cfg.env()
-    train_envs = ts.env.SubprocVectorEnv([cfg.env for _ in range(cfg.train_env_num)])
-    test_envs = ts.env.SubprocVectorEnv([cfg.env for _ in range(cfg.test_env_num)])
+    train_envs = ts.env.SubprocVectorEnv([cfg.train_env for _ in range(cfg.train_env_num)])
+    test_envs = ts.env.SubprocVectorEnv([cfg.valid_env for _ in range(cfg.test_env_num)])
     print(SUCCESS('Done!'))
     # crate an agent (policy)
     print(HIGHLIGHT("Create Agent:"))
