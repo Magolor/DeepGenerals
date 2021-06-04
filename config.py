@@ -16,7 +16,7 @@ class config():
             self.__setattr__(k, v)
 
 
-def get_config(task = 'CartPole'):
+def get_config(task = 'CartPole', exp_name = "default"):
     d = {}
     if task == 'CartPole':
         d = {
@@ -61,7 +61,9 @@ def get_config(task = 'CartPole'):
         d = {
             # environment related
             'name': 'Generals',
-            'env': lambda: create_generals_env(),
+            'env': lambda: create_generals_env(name = exp_name, auto_replay_id=False),
+            'train_env': lambda: create_generals_env(name = exp_name, auto_replay_id=False),
+            'valid_env': lambda: create_generals_env(name = exp_name),
             'train_env_num': 1,
             'test_env_num': 1,
             'num_agents':   2,
@@ -69,7 +71,7 @@ def get_config(task = 'CartPole'):
             # training related
             'buffer_size': 10000,
             'max_epoch': 30,
-            'step_per_epoch': 1000,
+            'step_per_epoch': 50,
             'step_per_collect': 10,
             'episode_per_test': 1,
             'batch_size': 16,

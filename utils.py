@@ -6,7 +6,9 @@ import time
 import tqdm
 import json
 import torch
+import string
 import shutil
+import random
 import logging
 import requests
 import jsonlines
@@ -96,6 +98,12 @@ def IP():
 
 def DATE():
     return time.strftime("%Y-%m-%d",time.localtime(time.time()))
+
+def DATETIME():
+    return time.strftime("%Y-%m-%d[%H.%M.%S]",time.localtime(time.time()))
+
+def RANDSTRING(length, charset=string.ascii_uppercase + string.digits):
+    return ''.join(random.choice(charset) for _ in range(length))
 
 def TQDM(something, s=0, desc=None):
     if type(something) is int:

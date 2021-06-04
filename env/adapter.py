@@ -9,6 +9,7 @@ from gym.spaces import Discrete,MultiDiscrete
 from env.generalsio import GeneralsMultiAgentEnv
 from env.states import PlayerAction
 from env.const import C
+from utils import *
 
 
 class KAZAdapter(knights_archers_zombies_v7.raw_env):#,gym.core.Env):
@@ -71,10 +72,12 @@ class GeneralsAdapter(GeneralsMultiAgentEnv):
         super(GeneralsAdapter, self).__init__(**kwargs)
         self.action_space = gym.spaces.discrete.Discrete(8*self.Wmax*self.Hmax)
         self.observation_space = gym.spaces.box.Box(low=-1,high=1,shape=(C.FEATURES*C.NUM_FRAME,self.Wmax,self.Hmax),dtype=np.float32)
+        self.name = kwargs['name']; self.auto_replay_id = kwargs['auto_replay_id']
 
     def reset(self, replay_id=None):
-        super(GeneralsAdapter, self).reset(replay_id)
-        obs, _, _, _ = self.last()
+        if replay_id is None and self.auto_replay_id:
+            replay_id = self.name+"_"+DATETIME()+"_"+RANDSTRING(8)
+        super(GeneralsAdapter, self).reset(replay_id); obs, _, _, _ = self.last()
         return Batch(obs = [torch.cat([f.serialize() for f in o],dim=0) for o in obs], agent_id = list(range(1,self.num_players+1)), wtf = 0)
 
     def step(self, actions):
@@ -83,8 +86,8 @@ class GeneralsAdapter(GeneralsMultiAgentEnv):
         obs, reward, done, info = self.last()
         return Batch(obs = [torch.cat([f.serialize() for f in o],dim=0) for o in obs], agent_id = list(range(1,self.num_players+1)), wft = 0), reward, done, info
 
-def create_generals_env():
-    env = GeneralsAdapter()
+def create_generals_env(name = "default", auto_replay_id = True):
+    env = GeneralsAdapter(name = name, auto_replay_id = auto_replay_id)
     return env
 
 if __name__=="__main__":

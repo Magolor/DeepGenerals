@@ -92,7 +92,7 @@ if __name__ == '__main__':
     'CartPole', 'PettingZoo', 'Generals'
     '''
     name = 'Generals'
-    cfg = config.get_config(name)
+    cfg = config.get_config(name, exp_name="default")
     Create('Experiment')
     utils.init(name, 'Experiment')
     train(cfg, utils.get_fs().get_root_path())

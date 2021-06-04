@@ -20,7 +20,8 @@ class GeneralsMultiAgentEnv(gym.Env):
         p_mountain = 0.2,
         p_city = 0.05,
         time_punishment = C.TIME_PUNISHMENT,
-        army_generator = UniformArmyGenerator(25,101)
+        army_generator = UniformArmyGenerator(25,101),
+        **kwargs
     ):
         super(GeneralsMultiAgentEnv, self).__init__()
         self.map = map0; self.state = None

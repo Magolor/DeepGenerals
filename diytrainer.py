@@ -7,7 +7,7 @@ from typing import Dict, Union, Callable, Optional
 from tianshou.data import Collector
 from tianshou.policy import BasePolicy
 from tianshou.utils import tqdm_config, MovAvg, BaseLogger, LazyLogger
-from tianshou.trainer import  gather_info
+from tianshou.trainer import test_episode, gather_info
 
 
 def offpolicy_trainer(
@@ -114,7 +114,7 @@ def offpolicy_trainer(
                     if test_in_train and stop_fn and stop_fn(result["rew"]):
                         test_result = test_episode(
                             policy, test_collector, test_fn,
-                            epoch, episode_per_test, logger, env_step,  replay_id=f'test_{epoch+1}')
+                            epoch, episode_per_test, logger, env_step)
                         if stop_fn(test_result["rew"]):
                             if save_fn:
                                 save_fn(policy)
@@ -140,7 +140,7 @@ def offpolicy_trainer(
                 t.update()
         # test
         test_result = test_episode(policy, test_collector, test_fn, epoch,
-                                   episode_per_test, logger, env_step, reward_metric, replay_id=f'test_{epoch+1}')
+                                   episode_per_test, logger, env_step, reward_metric)
         rew, rew_std = test_result["rew"], test_result["rew_std"]
         if best_epoch == -1 or best_reward < rew:
             best_reward, best_reward_std = rew, rew_std
@@ -155,36 +155,3 @@ def offpolicy_trainer(
             break
     return gather_info(start_time, train_collector, test_collector,
                        best_reward, best_reward_std)
-
-def test_episode(
-    policy: BasePolicy,
-    collector: Collector,
-    test_fn: Optional[Callable[[int, Optional[int]], None]],
-    epoch: int,
-    n_episode: int,
-    logger: Optional[BaseLogger] = None,
-    global_step: Optional[int] = None,
-    reward_metric: Optional[Callable[[np.ndarray], np.ndarray]] = None,
-    replay_id = None
-) :
-    """A simple wrapper of testing policy in collector."""
-
-    obs = collector.env.reset(replay_id = replay_id)
-    if collector.preprocess_fn:
-        obs = collector.preprocess_fn(obs=obs).get("obs", obs)
-    collector.data.obs = obs
-
-    collector.reset_buffer()
-    policy.eval()
-    if test_fn:
-        test_fn(epoch, global_step)
-    result = collector.collect(n_episode=n_episode)
-    if reward_metric:
-        result["rews"] = reward_metric(result["rews"])
-    if logger and global_step is not None:
-        logger.log_test_data(result, global_step)
-
-    return result
-
-
-
