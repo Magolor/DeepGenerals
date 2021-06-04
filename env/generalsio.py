@@ -14,8 +14,8 @@ class GeneralsMultiAgentEnv(gym.Env):
     def __init__(
         self,
         map0 = None,
-        Ws = [6],
-        Hs = [5],
+        Ws = [6,5],
+        Hs = [5,4],
         num_players = 2,
         p_mountain = 0.2,
         p_city = 0.05,
@@ -57,17 +57,22 @@ class GeneralsMultiAgentEnv(gym.Env):
     #         info = {}
 
     def reset(self, replay_id=None):
-        self.state = NewBoardStateFromMap(
-            NewRandomMap(
+        if self.map is None:
+            map0 = NewRandomMap(
                 np.random.choice(self.Ws),
                 np.random.choice(self.Hs),
                 self.num_players,
                 self.p_mountain,
                 self.p_city,
             )
-            if self.map is None else self.map,
-            army_generator = self.army_generator
-        )
+            map0.pad_to(self.Wmax, self.Hmax)
+            self.state = NewBoardStateFromMap(
+                map0, army_generator = self.army_generator
+            )
+        else:
+            self.state = NewBoardStateFromMap(
+                self.map, army_generator = self.army_generator
+            )
         self.history = [self.state.copy() for _ in range(C.NUM_FRAME)]
         self.step_result = ([[h.GetPlayerState(i) for h in self.history[-C.NUM_FRAME:]] for i in range(self.num_players)], None, None, None)
         self.replay_id = replay_id

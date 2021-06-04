@@ -40,6 +40,11 @@ class GridMap(object):
                 return False
         return True
 
+    def pad_to(self, W, H):
+        new_map = np.ones((W,H),dtype=np.int)
+        new_map[:self.W,:self.H] = self.map.copy()
+        self.W = W; self.H = H; self.map = new_map
+
 def NewRandomMap(W, H, num_players=2, p_mountain=0.2, p_city=0.05):
     while True:
         M = GridMap(W,H); R = [(i,j) for j in range(H) for i in range(W)]; np.random.shuffle(R)
@@ -61,7 +66,7 @@ class PlayerState(object):
         self.grd = board_grd; self.obs = board_obs; self.ctr = board_ctr; self.arm = board_arm; self.num_players = num_players; self.turn = turn; self.armies = armies; self.dead=dead
     
     def copy(self):
-        return PlayerState(self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obs.copy(),self.num_players,self.turn,self.armies,self.dead)
+        return PlayerState(self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obs.copy(),self.num_players,self.turn,list(self.armies),self.dead)
     
     def serialize(self):
         # customize !!!
@@ -132,7 +137,7 @@ class BoardState(object):
             self.dead = list() if dead is None else dead
     
     def serialize(self):
-        return (self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obss.copy(),self.turn,list(self.dead))
+        return (self.grd.copy(),self.ctr.copy(),self.arm.copy(),list(obs.copy() for obs in self.obss),self.turn,list(self.dead))
 
     def unserialize(self, board_state):
         self = BoardState(*board_state); return self

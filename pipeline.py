@@ -56,7 +56,7 @@ def train(cfg, log_dir = None):
     torch.save(policy, cfg.name+'.pt')
 
 
-def visualize(cfg, model_path=None, random = False):
+def visualize(cfg, num_episodes = 5, model_path = None, random = False):
     with torch.no_grad():
         env = cfg.env()
         if not random:
@@ -66,7 +66,7 @@ def visualize(cfg, model_path=None, random = False):
             policy.eval()
 
         steps = 0
-        for i in tqdm.trange(10):
+        for i in tqdm.trange(num_episodes):
             done = False
             info = {}
             obs = env.reset("basic_test_%05d"%i)
@@ -96,4 +96,4 @@ if __name__ == '__main__':
     Create('Experiment')
     utils.init(name, 'Experiment')
     # train(cfg, utils.get_fs().get_root_path())
-    visualize(cfg, random=True)
+    visualize(cfg, num_episodes=5, random=True)
