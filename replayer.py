@@ -54,29 +54,33 @@ class GUI(QWidget):
         self.b = int(min(self.W*0.775/(self.shape[0]+1),self.H*0.950/(self.shape[1]+1)))
         self.font_size = self.b//8
         self.replay = replay
+        self.active = False
         self.turn = 0
 
         self.font = QFont('Consolas',self.font_size); self.font.setBold(True)
 
         next = QPushButton("NEXT",self); next.setProperty('class', 'default'); next.clicked.connect(self.NEXT)
         next.move(int(self.W*0.85),int(self.H*0.05)); next.resize(int(self.W*0.1),int(self.H*0.4))
-
+        next_sc = QShortcut(QKeySequence('Right'), self); next_sc.activated.connect(self.NEXT)
         prev = QPushButton("PREV",self); prev.setProperty('class', 'default'); prev.clicked.connect(self.PREV)
         prev.move(int(self.W*0.85),int(self.H*0.15)); prev.resize(int(self.W*0.1),int(self.H*0.4))
+        prev_sc = QShortcut(QKeySequence( 'Left'), self); prev_sc.activated.connect(self.PREV)
 
         exit = QPushButton("START",self); exit.setProperty('class', 'success'); exit.clicked.connect(self.START)
         exit.move(int(self.W*0.85),int(self.H*0.25)); exit.resize(int(self.W*0.1),int(self.H*0.4))
-
         exit = QPushButton("PAUSE",self); exit.setProperty('class', 'warning'); exit.clicked.connect(self.PAUSE)
         exit.move(int(self.W*0.85),int(self.H*0.35)); exit.resize(int(self.W*0.1),int(self.H*0.4));
+        next_sc = QShortcut(QKeySequence('Space'), self); next_sc.activated.connect(self.SWITCH)
 
         self.num_players = 2; self.current_player = 0
         for player in range(self.num_players+1):
             p = QPushButton("PLAYER %d"%player if player else "GOD",self); p.setProperty('class', 'default' if player else 'warning'); p.clicked.connect(partial(self.PLAYER,player))
             p.move(int(self.W*0.85),int(self.H*(0.45+player*0.1))); p.resize(int(self.W*0.1),int(self.H*0.4))
+            player_sc = QShortcut(QKeySequence('%d'%player), self); player_sc.activated.connect(partial(self.PLAYER,player))
 
         exit = QPushButton("EXIT",self); exit.setProperty('class', 'danger'); exit.clicked.connect(self.EXIT)
         exit.move(int(self.W*0.85),int(self.H*0.85)); exit.resize(int(self.W*0.1),int(self.H*0.4))
+        exit_sc = QShortcut(QKeySequence('Escape'), self); exit_sc.activated.connect(self.EXIT)
 
         self.framerate = framerate
         self.timer = QTimerWithPause(self)
@@ -98,10 +102,18 @@ class GUI(QWidget):
         self.repaint()
 
     def START(self):
+        self.active = True
         self.timer.startTimer(1000//self.framerate)
 
     def PAUSE(self):
+        self.active = False
         self.timer.pauseTimer()
+
+    def SWITCH(self):
+        if self.active:
+            self.PAUSE()
+        else:
+            self.START()
 
     def EXIT(self):
         QCoreApplication.instance().quit()
