@@ -61,12 +61,12 @@ def NewRandomMap(W, H, num_players=2, p_mountain=0.2, p_city=0.05):
     return M
 
 class PlayerState(object):
-    def __init__(self, board_grd, board_ctr, board_arm, board_obs, num_players, turn, armies, dead=False):
+    def __init__(self, board_grd, board_ctr, board_arm, board_obs, num_players, turn, armies, dead=False, done=False):
         self.board_shape = board_grd.shape; assert(board_obs.shape==self.board_shape); assert(board_ctr.shape==self.board_shape); assert(board_arm.shape==self.board_shape)
-        self.grd = board_grd; self.obs = board_obs; self.ctr = board_ctr; self.arm = board_arm; self.num_players = num_players; self.turn = turn; self.armies = armies; self.dead=dead
+        self.grd = board_grd; self.obs = board_obs; self.ctr = board_ctr; self.arm = board_arm; self.num_players = num_players; self.turn = turn; self.armies = armies; self.dead=dead; self.done = done
     
     def copy(self):
-        return PlayerState(self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obs.copy(),self.num_players,self.turn,list(self.armies),self.dead)
+        return PlayerState(self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obs.copy(),self.num_players,self.turn,list(self.armies),self.dead,self.done)
     
     # TODO: feature design
     def serialize(self):
@@ -85,7 +85,22 @@ class PlayerState(object):
         return torch.stack(map_data + stat_data,dim=0).float()
     
     def Score(self):
-        return 0
+        if self.dead:
+            reward = -100.
+        elif self.done:
+            reward = 100.
+        else:
+            W,H = self.board_shape
+            reward = 0.
+            reward += self.ArmyControlled() * 25            # 25  * 0.5             
+            reward += self.CapitalObserved() * 10           # 0                     
+            reward += self.CityControlled() * 5             # 5   * 1               
+            reward += self.CityObserving() * 1              # 1   * 1               
+            reward += self.CityObserved() * 0.5             # 0.5 * 1               
+            reward += self.LandControlled() * 25 / (W*H)    # 1                     
+            reward += self.LandObserving() * 5 / (W*H)      # 5   * 1/3             
+            reward += self.LandObserved() * 1 / (W*H)       # 5   * 1/3             
+        return reward * C.REWARD_SCALE
 
     def CityControlled(self):
         return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.ctr[i][j]==C.BOARD_SELF) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
@@ -112,7 +127,7 @@ class PlayerState(object):
         return sum([(self.grd[i][j]==C.LAND_CAPITAL and self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
     def ArmyControlled(self):
-        return sum([self.arm[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])
+        return sum([self.arm[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])/float(sum(self.armies))
 
 class PlayerAction(object):
     def __init__(self, src, dir, half=False):
@@ -164,7 +179,7 @@ class BoardState(object):
                 if obs[i][j]==C.OBSERVED and grd[i][j]!=C.LAND_MOUNTAIN:      # clear observed status
                     ctr[i][j] = C.BOARD_FOG
                     arm[i][j] = 0
-        return PlayerState(grd,ctr,arm,obs,self.num_players,self.turn,armies,player_id in self.dead)
+        return PlayerState(grd,ctr,arm,obs,self.num_players,self.turn,armies,player_id in self.dead,len(self.dead)>=self.num_players-1)
 
     def GetNextState_(self, actions):
         self.turn += 1; assert(len(actions)==self.num_players)

@@ -19,6 +19,7 @@ class GeneralsMultiAgentEnv(gym.Env):
         num_players = 2,
         p_mountain = 0.2,
         p_city = 0.05,
+        time_punishment = C.TIME_PUNISHMENT,
         army_generator = UniformArmyGenerator(25,101)
     ):
         super(GeneralsMultiAgentEnv, self).__init__()
@@ -32,12 +33,13 @@ class GeneralsMultiAgentEnv(gym.Env):
         self.history = []
         self.step_result = None
         self.replay_id = None
+        self.time_punishment = time_punishment
     
     def step(self, actions):
         old_observations = [[h.GetPlayerState(i) for h in self.history[-C.NUM_FRAME:]] for i in range(self.num_players)]
-        done = self.state.GetNextState_(actions); self.history.append(self.state.copy())
+        done = self.state.GetNextState_(actions); self.history.append(self.state.copy()); done = True if len(self.history)>C.NUM_FRAME+C.MAX_TURN else done
         new_observations = [[h.GetPlayerState(i) for h in self.history[-C.NUM_FRAME:]] for i in range(self.num_players)]
-        rewards = [new_observations[i][-1].Score() - old_observations[i][-1].Score() for i in range(self.num_players)]
+        rewards = [new_observations[i][-1].Score() - old_observations[i][-1].Score() - self.time_punishment for i in range(self.num_players)]
         self.step_result = (new_observations, rewards, done, {})
         if done:
             self.save_replay()

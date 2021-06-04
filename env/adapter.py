@@ -61,7 +61,7 @@ def create_kaz_env(**kwargs):
 
 def ActionSpaceToActions(batch, W, H):
     acts = []
-    for act in batch.act:
+    for act in batch:
         w = act % (W*H) // H; h = act % H; half = act // (W*H) % 2; dir = act // (W*H) // 2
         acts.append(PlayerAction((w,h),C.MOVEABLE_DIRECTIONS[dir],half=half))
     return acts

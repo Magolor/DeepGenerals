@@ -14,26 +14,26 @@ from utils import *
 
 def train(cfg, log_dir = None):
     # get environment
-    print("Create Virtual Environment:")
+    print(HIGHLIGHT("Create Virtual Environment:"))
     env = cfg.env()
     train_envs = ts.env.SubprocVectorEnv([cfg.env for _ in range(cfg.train_env_num)])
     test_envs = ts.env.SubprocVectorEnv([cfg.env for _ in range(cfg.test_env_num)])
-    print('Done!')
+    print(SUCCESS('Done!'))
     # crate an agent (policy)
-    print("Create Agent:")
+    print(HIGHLIGHT("Create Agent:"))
     input_shape = env.observation_space.shape or env.observation_space.n
     n = env.action_space.shape or env.action_space.n
     policy = get_policy(cfg, input_shape, n, cfg.name)
-    print('Done!')
+    print(SUCCESS('Done!'))
     # create a collector
-    print("Create Buffer:")
+    print(HIGHLIGHT("Create Buffer:"))
     train_collector = ts.data.Collector(policy, train_envs,
                                         ts.data.VectorReplayBuffer(cfg.buffer_size, cfg.train_env_num),
                                         exploration_noise=True)
     test_collector = ts.data.Collector(policy, test_envs, exploration_noise=True)
-    print("Done!")
+    print(SUCCESS('Done!'))
     # create a trainer
-    print("Start training!")
+    print(HIGHLIGHT("Start training!"))
     result = offpolicy_trainer(
         policy = policy,
         train_collector = train_collector,
@@ -45,7 +45,7 @@ def train(cfg, log_dir = None):
         batch_size=cfg.batch_size,
         update_per_step=cfg.update_per_step,
         train_fn=ExplorationRateDecayPolicy(policy, cfg.max_epoch,cfg.step_per_epoch),
-        test_fn=ExplorationRateDecayPolicy(policy, cfg.max_epoch,cfg.step_per_epoch,mile_stones=(),rates=(0.05,)),
+        test_fn=ExplorationRateDecayPolicy(policy, cfg.max_epoch,cfg.step_per_epoch,mile_stones=(),rates=(0.25,)),
         save_fn=lambda policy: torch.save(policy,utils.get_fs().get_checkpoint_dirpath()/'best.pt'),
         logger=BasicLogger(SummaryWriter(log_dir))
     )
@@ -95,5 +95,5 @@ if __name__ == '__main__':
     cfg = config.get_config(name)
     Create('Experiment')
     utils.init(name, 'Experiment')
-    # train(cfg, utils.get_fs().get_root_path())
-    visualize(cfg, num_episodes=5, random=True)
+    train(cfg, utils.get_fs().get_root_path())
+    # visualize(cfg, num_episodes=5, random=True)

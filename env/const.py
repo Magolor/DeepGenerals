@@ -10,7 +10,6 @@ class C:
     BOARD_FOG = 0
     BOARD_NEUTRAL = 1
     BOARD_SELF = 2
-    PLAYER0 = 2
 
     # obs
     UNOBSERVED = 0
@@ -22,7 +21,7 @@ class C:
     TURN_PER_NEW_ARMY_CAPITAL = 2
 
     def HAS_HOUSE(g):
-        return g==LAND_CITY or g==LAND_CAPITAL
+        return g==C.LAND_CITY or g==C.LAND_CAPITAL
 
     MOVEABLE_DIRECTIONS = ((-1,0),(0,1),(1,0),(0,-1))
     OBSERVABLE_DIRECTIONS = ((-1,-1),(-1,0),(-1,1),(0,-1),(0,0),(0,1),(1,-1),(1,0),(1,1))
@@ -30,3 +29,6 @@ class C:
     # NN utils
     FEATURES = 16
     NUM_FRAME = 8
+    MAX_TURN = 2000
+    REWARD_SCALE = 100
+    TIME_PUNISHMENT = 1e-3 * REWARD_SCALE
