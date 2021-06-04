@@ -160,6 +160,9 @@ class BoardState(object):
                     grd[i][j] = C.LAND_FOG
                     ctr[i][j] = C.BOARD_FOG
                     arm[i][j] = 0
+                if obs[i][j]==C.OBSERVED and grd[i][j]!=C.LAND_MOUNTAIN:      # clear observed status
+                    ctr[i][j] = C.BOARD_FOG
+                    arm[i][j] = 0
         return PlayerState(grd,ctr,arm,obs,self.num_players,self.turn,armies,player_id in self.dead)
 
     def GetNextState_(self, actions):
