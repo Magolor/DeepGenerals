@@ -95,5 +95,5 @@ if __name__ == '__main__':
     cfg = config.get_config(name)
     Create('Experiment')
     utils.init(name, 'Experiment')
-    train(cfg, utils.get_fs().get_root_path())
-    #visualize(cfg, random=True)
+    # train(cfg, utils.get_fs().get_root_path())
+    visualize(cfg, random=True)
