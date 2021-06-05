@@ -70,14 +70,14 @@ def get_config(task = 'CartPole', exp_name = "default"):
 
             # training related
             'buffer_size': 10000,
-            'max_epoch': 30,
-            'step_per_epoch': 50,
-            'step_per_collect': 10,
-            'episode_per_test': 1,
-            'batch_size': 16,
-            'update_per_step': 0.2,
+            'max_epoch': 10,
+            'step_per_epoch': 5000,
+            'step_per_collect': 200,
+            'episode_per_test': 2,
+            'batch_size': 128,
+            'update_per_step': 0.1,
             'algo': 'dqn',
-            'device': 'cuda' if torch.cuda.is_available() else 'cpu'
+            'device': 'cuda:3' if torch.cuda.is_available() else 'cpu'
         }
 
     return config(d)
