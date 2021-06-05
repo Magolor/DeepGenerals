@@ -8,12 +8,15 @@ from tianshou.data import Collector
 from tianshou.policy import BasePolicy
 from tianshou.utils import tqdm_config, MovAvg, BaseLogger, LazyLogger
 from tianshou.trainer import test_episode, gather_info
+from tool import Tracker, Utils
+from utils import HIGHLIGHT, SUCCESS
 
 
 def offpolicy_trainer(
     policy: BasePolicy,
     train_collector: Collector,
     test_collector: Collector,
+    utils: Utils,
     max_epoch: int,
     step_per_epoch: int,
     step_per_collect: int,
@@ -25,9 +28,7 @@ def offpolicy_trainer(
     stop_fn: Optional[Callable[[float], bool]] = None,
     save_fn: Optional[Callable[[BasePolicy], None]] = None,
     reward_metric: Optional[Callable[[np.ndarray], np.ndarray]] = None,
-    logger: BaseLogger = LazyLogger(),
-    verbose: bool = True,
-    test_in_train: bool = True,
+    test_in_train: bool = True
 ) -> Dict[str, Union[float, str]]:
     """A wrapper for off-policy trainer procedure.
 
@@ -76,45 +77,42 @@ def offpolicy_trainer(
     :return: See :func:`~tianshou.trainer.gather_info`.
     """
     env_step, gradient_step = 0, 0
-    last_rew, last_len = 0.0, 0
-    stat: Dict[str, MovAvg] = defaultdict(MovAvg)
     start_time = time.time()
     train_collector.reset_stat()
     test_collector.reset_stat()
     test_in_train = test_in_train and train_collector.policy == policy
-    #test_result = test_episode(policy, test_collector, test_fn, 0, episode_per_test,
-    #                           logger, env_step, reward_metric)
-    best_epoch = 0
-    best_reward, best_reward_std = 0, 0#test_result["rew"], test_result["rew_std"]
+    best_reward, best_reward_std = None, None
+    rewards = None
+    len = 0
+    tracker = utils.get_tracker()
+
     for epoch in range(1, 1 + max_epoch):
         # train
         policy.train()
-        with tqdm.tqdm(
-            total=step_per_epoch, desc=f"Epoch #{epoch}"
-        ) as t:
+        with tqdm.tqdm(total=step_per_epoch) as t:
             while t.n < t.total:
                 if train_fn:
                     train_fn(epoch, env_step)
+                # collect data
                 result = train_collector.collect(n_step=step_per_collect)
-                if result["n/ep"] > 0 and reward_metric:
-                    result["rews"] = reward_metric(result["rews"])
+                # track episode data
+                for ep in range(result['n/ep']):
+                    tracker.track('train_episode',{
+                        'len': int(result['lens'][ep]),
+                        'rew': result['rews'][ep].tolist()
+                    })
+                    len = result['lens'][ep]
+                    rewards = result['rews'][ep]
+
                 env_step += int(result["n/st"])
                 t.update(result["n/st"])
-                logger.log_train_data(result, env_step)
-                last_rew = result['rew'] if 'rew' in result else last_rew
-                last_len = result['len'] if 'len' in result else last_len
-                data = {
-                    "env_step": str(env_step),
-                    "rew": f"{last_rew:.4f}",
-                    "len": str(int(last_len)),
-                    "n/ep": str(int(result["n/ep"])),
-                    "n/st": str(int(result["n/st"])),
-                }
+
+                # early stopping
                 if result["n/ep"] > 0:
                     if test_in_train and stop_fn and stop_fn(result["rew"]):
                         test_result = test_episode(
                             policy, test_collector, test_fn,
-                            epoch, episode_per_test, logger, env_step)
+                            epoch, episode_per_test, None, env_step)
                         if stop_fn(test_result["rew"]):
                             if save_fn:
                                 save_fn(policy)
@@ -125,33 +123,41 @@ def offpolicy_trainer(
                             policy.train()
                 for i in range(round(update_per_step * result["n/st"])):
                     gradient_step += 1
-                    # ???????
-                    losses = policy.update(batch_size, train_collector.buffer, batch_size=batch_size,repeat = 10)
-                    describe = ''
-                    for k in losses.keys():
-                        stat[k].add(losses[k])
-                        losses[k] = stat[k].get()
-                        data[k] = f"{losses[k]:.3f}"
-                        describe += k + f': {data[k]}'
-                    logger.log_update_data(losses, gradient_step)
-                    losses.update({'rew': data['rew']})
-                    t.set_postfix(losses)
+                    losses = policy.update(batch_size, train_collector.buffer) #batch_size=batch_size,repeat = 10)
+                    tracker.track('train_losses', list(losses.values()))
+                describe = HIGHLIGHT(f"#{epoch} ")
+                if rewards is not None:
+                    for index, rew in enumerate(rewards):
+                        describe+= SUCCESS(f'r{index+1}: ') + "{:.2f} ".format(rew)
+                    for index, loss in enumerate(losses.values()):
+                        describe+= HIGHLIGHT(f"l{index+1}: ") + "{:.2f} ".format(loss)
+                    describe+= "len: {}".format(len)
+                t.set_description(desc=describe)
             if t.n <= t.total:
                 t.update()
+            # show
         # test
+        #from tianshou.trainer import offpolicy_trainer
         test_result = test_episode(policy, test_collector, test_fn, epoch,
-                                   episode_per_test, logger, env_step, reward_metric)
-        rew, rew_std = test_result["rew"], test_result["rew_std"]
-        if best_epoch == -1 or best_reward < rew:
-            best_reward, best_reward_std = rew, rew_std
-            best_epoch = epoch
-            if save_fn:
-                save_fn(policy)
-        if verbose:
-            print(
-                f"Epoch #{epoch}: test_reward: {rew:.6f} ± {rew_std:.6f}, best_reward:"
-                f" {best_reward:.6f} ± {best_reward_std:.6f} in #{best_epoch}")
+                                   episode_per_test, None, env_step, reward_metric)
+        rew  = test_result["rews"]
+        rew_mean = rew.mean(axis = 0)
+        rew_std = rew.std(axis = 0)
+        for ep in range(test_result['n/ep']):
+            tracker.track('test_episode',{
+                'len': int(test_result['lens'][ep]),
+                'rew': test_result['rews'][ep].tolist()
+            })
+
+        # ??? to be update
+        save_fn(policy)
+
+        describe = HIGHLIGHT(f'Epoch #{epoch} Rewards:\n')
+        for index, (rew_mean_i, rew_std_i) in enumerate(zip(rew_mean, rew_std)):
+            describe += "ag{}: {:.4f} ± {:.4f}\n".format(index+1, rew_mean_i, rew_std_i)
+        utils.log(describe)
+        utils.log('++++++++++++++++++++++++++++')
+        tracker.save()
+
         if stop_fn and stop_fn(best_reward):
             break
-    return gather_info(start_time, train_collector, test_collector,
-                       best_reward, best_reward_std)

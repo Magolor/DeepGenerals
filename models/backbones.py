@@ -97,12 +97,12 @@ class CBR(nn.Sequential):
 class FCNBackbone(backbone):
     def __init__(self, in_channels):
         super(FCNBackbone, self).__init__(False, False)
-        self.stem = PixelMlp(in_channels,128, 128)
-        self.stage1 = _DenseBlock(4, 128, 4 ,32 ,0 ,True)
-        channels = 128 + 4*32
+        self.stem = PixelMlp(in_channels,256, 64)
+        self.stage1 = _DenseBlock(4, 64, 4 ,16 ,0 ,True)
+        channels = 64 + 4*16
         self.cbr = CBR(channels, channels)
-        self.stage2 = _DenseBlock(8,channels,4,32,0,True)
-        self.channels = channels + 8 * 32
+        self.stage2 = _DenseBlock(8,channels,4,16,0,True)
+        self.channels = channels + 8 * 16
 
     def forward(self, x):
         x = self.preprocess(x, self.get_device())
@@ -124,9 +124,25 @@ class SelfAttnBackbone(backbone):
         Fully preserve spacial information
         (B, C, H, W) -> (B, C', H, W).
     '''
-    def __init__(self, in_channels):
-        super(SelfAttnBackbone, self).__init__()
-        self.stem = PixelMlp(in_channels, )
+    def __init__(self, in_shape):
+        super(SelfAttnBackbone, self).__init__(False, False)
+        c, h,w = in_shape
+        self.stem = PixelMlp(c, 256, 64)
+        self.stage1 = SelfAttnBlock(dim=64,window_size=(h//4,w//4),num_heads=8)
+        self.trans1 = PixelMlp(64,256,128)
+        self.stage2 = SelfAttnBlock(dim=128,window_size=(h//2,w//2),num_heads=16)
+        self.trans2 = PixelMlp(128, 256, 128)
+        self.stage3 = SelfAttnBlock(dim=128, window_size=(h,w), num_heads = 16)
+        self.out = PixelMlp(128,256, 256)
+
+    def get_device(self):
+        return self.cbr.conv.weight.device
+
+    def out_channels(self):
+        return 256
+
+    def out_stride(self):
+        return 1
 
 
 
