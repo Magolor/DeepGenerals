@@ -41,7 +41,7 @@ class GeneralsMultiAgentEnv(gym.Env):
         rewards = [
         (   new_observations[i][-1].Score()
         -   old_observations[i][-1].Score()
-        -   C.TIME_PUNISHMENT * REWARD_SCALE
+        -   C.TIME_PUNISHMENT * C.REWARD_SCALE
         -   force_done * 10 * C.REWARD_SCALE)
         for i in range(self.num_players)
         ]
