@@ -81,6 +81,9 @@ class GUI(QWidget):
         exit = QPushButton("EXIT",self); exit.setProperty('class', 'danger'); exit.clicked.connect(self.EXIT)
         exit.move(int(self.W*0.85),int(self.H*0.85)); exit.resize(int(self.W*0.1),int(self.H*0.4))
         exit_sc = QShortcut(QKeySequence('Escape'), self); exit_sc.activated.connect(self.EXIT)
+        
+        pgup_sc = QShortcut(QKeySequence('PgUp'), self); pgup_sc.activated.connect(self.BEGIN)
+        pgdn_sc = QShortcut(QKeySequence('PgDown'), self); pgdn_sc.activated.connect(self.END)
 
         self.framerate = framerate
         self.timer = QTimerWithPause(self)
@@ -127,6 +130,20 @@ class GUI(QWidget):
     def PREV(self):
         if self.turn > 0:
             self.turn -= 1;
+            self.update()
+            self.repaint()
+
+    def BEGIN(self):
+        self.PAUSE()
+        if self.turn != 0:
+            self.turn = 0
+            self.update()
+            self.repaint()
+
+    def END(self):
+        self.PAUSE()
+        if self.turn != self.num_turns:
+            self.turn = self.num_turns
             self.update()
             self.repaint()
 
@@ -206,7 +223,7 @@ def Replay(replay_id, offset = C.NUM_FRAME-1, framerate = 10):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", dest="id", help="Replay ID", type=str, default="First_2021-06-07[16.34.11]_4A486YR0")
+    parser.add_argument("-i", dest="id", help="Replay ID", type=str, default="First_2021-06-05[16.56.06]_HPEFMDD9")
     parser.add_argument("-f", dest="framerate", help="Turn per Sec", type=int, default=20)
     args = parser.parse_args()
     Replay(args.id, framerate=args.framerate)
