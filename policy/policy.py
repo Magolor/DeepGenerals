@@ -1,7 +1,7 @@
 from policy import dqn
 from policy import ppo
 #from policy import sac
-from tianshou.policy import MultiAgentPolicyManager
+from policy.mapolicy import MultiAgentPolicyManager
 
 
 # a function to get policy for each configuration

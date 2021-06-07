@@ -30,7 +30,7 @@ def train(cfg, utils):
     # create a collector
     utils.log(HIGHLIGHT("Create Buffer:"))
     train_collector = ts.data.Collector(policy, train_envs,
-                                        ts.data.VectorReplayBuffer(cfg.buffer_size, cfg.train_env_num),
+                                        ts.data.PrioritizedVectorReplayBuffer(cfg.buffer_size, cfg.train_env_num, alpha=0.4, beta=0.6),
                                         exploration_noise=True)
     test_collector = ts.data.Collector(policy, test_envs, exploration_noise=True)
     utils.log(SUCCESS('Done!'))
@@ -48,8 +48,8 @@ def train(cfg, utils):
         episode_per_test=cfg.episode_per_test,
         batch_size=cfg.batch_size,
         update_per_step=cfg.update_per_step,
-        train_fn=ExplorationRateDecayPolicy(policy, cfg.max_epoch,cfg.step_per_epoch),
-        test_fn=ExplorationRateDecayPolicy(policy, cfg.max_epoch,cfg.step_per_epoch,mile_stones=(),rates=(0.25,)),
+        train_fn=ExplorationRateDecayPolicy(policy, cfg.max_epoch,cfg.step_per_epoch,mile_stones=(20,50,80),rates=(0.9,0.25,0.1,0.05)),
+        test_fn=ExplorationRateDecayPolicy(policy, cfg.max_epoch,cfg.step_per_epoch,mile_stones=(),rates=(0.05,)),
         save_fn=lambda policy: torch.save(policy,utils.get_fs().get_checkpoint_dirpath()/'best.pt'),
     )
     utils.log(result)

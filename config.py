@@ -62,7 +62,7 @@ def get_config(task = 'CartPole', exp_name = "default"):
             # environment related
             'name': 'Generals',
             'env': lambda: create_generals_env(name = exp_name, auto_replay_id=False),
-            'train_env': lambda: create_generals_env(name = exp_name, auto_replay_id=False),
+            'train_env': lambda: create_generals_env(name = exp_name, auto_replay_id=True),
             'valid_env': lambda: create_generals_env(name = exp_name),
             'train_env_num': 1,
             'test_env_num': 1,
@@ -70,14 +70,14 @@ def get_config(task = 'CartPole', exp_name = "default"):
 
             # training related
             'buffer_size': 10000,
-            'max_epoch': 30,
-            'step_per_epoch': 5000,
-            'step_per_collect': 60,
+            'max_epoch': 100,
+            'step_per_epoch': 10000,
+            'step_per_collect': 32,
             'episode_per_test': 2,
             'batch_size': 64,
-            'update_per_step': 0.05,
+            'update_per_step': 0.10,
             'algo': 'dqn',
-            'device': 'cuda:1' if torch.cuda.is_available() else 'cpu'
+            'device': 'cuda' if torch.cuda.is_available() else 'cpu'
         }
 
     return config(d)

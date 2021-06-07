@@ -138,6 +138,12 @@ def WARN(something):
 def HIGHLIGHT(something):
     return "\033[1;34m"+str(something)+"\033[0m"
 
+def COLOR1(something):
+    return "\033[1;35m"+str(something)+"\033[0m"
+
+def COLOR2(something):
+    return "\033[1;36m"+str(something)+"\033[0m"
+
 logging.getLogger('PIL').setLevel(logging.WARNING)
 logging.getLogger('matplotlib.font_manager').disabled = True
 def Logger(PATH, level='debug', console=False, mode='a'):

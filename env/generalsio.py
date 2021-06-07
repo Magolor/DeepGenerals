@@ -42,7 +42,7 @@ class GeneralsMultiAgentEnv(gym.Env):
         (   new_observations[i][-1].Score()
         -   old_observations[i][-1].Score()
         -   C.TIME_PUNISHMENT * C.REWARD_SCALE
-        -   force_done * 10 * C.REWARD_SCALE)
+        -   force_done * 0.1 * C.REWARD_SCALE)
         for i in range(self.num_players)
         ]
         done = done or force_done

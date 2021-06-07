@@ -86,20 +86,18 @@ class PlayerState(object):
     
     def Score(self):
         if self.dead:
-            reward = -100.
+            reward = -25.
         elif self.done:
-            reward = 100.
+            reward = 25.
         else:
             W,H = self.board_shape
             reward = 0.
             reward += self.ArmyControlled() * 25            # 25  * 0.5             
             reward += self.CapitalObserved() * 10           # 0                     
             reward += self.CityControlled() * 5             # 5   * 1               
-            reward += self.CityObserving() * 1              # 1   * 1               
-            reward += self.CityObserved() * 0.5             # 0.5 * 1               
+            reward += self.CityObserved() * 1               # 1   * 1               
             reward += self.LandControlled() * 25 / (W*H)    # 1                     
-            reward += self.LandObserving() * 5 / (W*H)      # 5   * 1/3             
-            reward += self.LandObserved() * 1 / (W*H)       # 5   * 1/3             
+            reward += self.LandObserved() * 5 / (W*H)       # 5   * 1/3             
         return reward * C.REWARD_SCALE
 
     def CityControlled(self):

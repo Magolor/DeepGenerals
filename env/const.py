@@ -31,4 +31,4 @@ class C:
     NUM_FRAME = 8
     MAX_TURN = 1000
     REWARD_SCALE = 10
-    TIME_PUNISHMENT = 1e-3
+    TIME_PUNISHMENT = 1e-4
