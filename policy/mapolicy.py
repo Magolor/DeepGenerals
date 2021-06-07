@@ -33,6 +33,11 @@ class MultiAgentPolicyManager(BasePolicy):
             # agent_id 0 is reserved for the environment proxy
             # (this MultiAgentPolicyManager)
             policy.set_agent_id(i + 1)
+            policy.set_eps(0)
+        self.rate = 0
+
+    def set_eps(self, rate):
+        self.rate = rate
 
     def replace_policy(self, policy: BasePolicy, agent_id: int) -> None:
         """Replace the "agent_id"th policy in this manager."""
@@ -61,7 +66,8 @@ class MultiAgentPolicyManager(BasePolicy):
         for policy in self.policies:
             agent_index = policy.agent_id-1
 
-            tmp_batch, tmp_indice = self.get_agent_batch(batch, agent_index), indice
+            tmp_batch,_ = self.get_agent_batch(batch, agent_index)
+            tmp_indice = indice
             results[f"agent_{policy.agent_id}"] = policy.process_fn(
                 tmp_batch, self.adapt_buffer(buffer, indice, agent_index), tmp_indice)
         return Batch(results)
@@ -72,6 +78,7 @@ class MultiAgentPolicyManager(BasePolicy):
         #if self.act is
         act = batch.act[:, agent_id] if isinstance(batch.act, np.ndarray) else batch.act
         rew = batch.rew[:, agent_id] if isinstance(batch.rew, np.ndarray) else batch.rew
+        god = None if not hasattr(batch.obs, 'god') else batch.obs.god[:, agent_id]
         net_batch = Batch({
             'obs': obs,
             'done': batch.done,
@@ -81,7 +88,7 @@ class MultiAgentPolicyManager(BasePolicy):
             'act': act,
             'obs_next': obs_next
         })
-        return net_batch
+        return net_batch, god
 
     def exploration_noise(
         self, act: Union[np.ndarray, Batch], batch: Batch
@@ -135,10 +142,27 @@ class MultiAgentPolicyManager(BasePolicy):
             # we separate the transition of each agent according to agent_id
 
             agent_index = policy.agent_id -1
-            tmp_batch = self.get_agent_batch(batch,agent_index)
-            out = policy(batch=tmp_batch, state=None if state is None
+            tmp_batch, god = self.get_agent_batch(batch,agent_index)
+            if np.random.rand()> self.rate:
+                out = policy(batch=tmp_batch, state=None if state is None
                          else state["agent_" + str(policy.agent_id)],
                          **kwargs)
+            else:
+                acts = []
+                logits = []
+                device = tmp_batch.obs.device
+                for b, g in enumerate(god):
+                    act_lists = g.AvailableActions(serialize = True)
+                    act_lists.append(0)
+                    act = np.random.choice(act_lists)
+                    logit = torch.zeros(size = (np.prod(g.board_shape)*8,), dtype = torch.float)
+                    logit[act] = 1
+                    acts.append(act)
+                    logits.append(logit)
+                out = Batch(act = np.array(acts),
+                            logits = torch.stack(logits,dim=0).to(device = device),
+                            state = None)
+
             act = out.act
             each_state = out.state \
                 if (hasattr(out, "state") and out.state is not None) \

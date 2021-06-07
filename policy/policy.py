@@ -28,6 +28,8 @@ class ExplorationRateDecayPolicy():
         self.rates = rates
 
     def set_eps(self, r):
+        self.policy.set_eps(r)
+        '''
         if isinstance(self.policy, MultiAgentPolicyManager):
             for single_policy in self.policy.policies:
                 if hasattr(single_policy, 'set_eps'):
@@ -35,6 +37,7 @@ class ExplorationRateDecayPolicy():
         else:
             if hasattr(self.policy, 'set_eps'):
                 self.policy.set_eps(r)
+        '''
 
     def __call__(self, epoch, steps):
         ratio = steps/self.total
