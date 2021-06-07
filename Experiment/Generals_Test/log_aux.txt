@@ -1,8 +1,0 @@
-[1;34mCreate Virtual Environment:[0m
-[1;32mDone![0m
-[1;34mCreate Agent:[0m
-[1;32mDone![0m
-[1;34mCreate Buffer:[0m
-[1;32mDone![0m
-[1;34mStart training![0m
-++++++++++++++++++++++++++++
