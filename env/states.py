@@ -60,6 +60,25 @@ def NewRandomMap(W, H, num_players=2, p_mountain=0.2, p_city=0.05):
             break
     return M
 
+class PlayerAction(object):
+    def __init__(self, src, dir, half=False):
+        assert(tuple(dir) in C.MOVEABLE_DIRECTIONS); self.dir_id = self.MOVEABLE_DIRECTIONS_ID[dir]
+        self.src = src; self.dir = dir; self.dst = (src[0]+dir[0],src[1]+dir[1]); self.half = half
+
+    def IsAvailableIn(self, state, player_id=0):
+        return (
+            (0<=self.dst[0]<state.board_shape[0] and 0<=self.dst[1]<state.board_shape[1])       # in the board
+        and (state.ctr[self.src[0]][self.src[1]]==player_id+C.BOARD_SELF)                       # controlled by oneself
+        and (state.grd[self.dst[0]][self.dst[1]]!=C.LAND_MOUNTAIN)                              # not moving to mountain
+        and (state.arm[self.src[0]][self.src[1]]>1)                                             # have army to move
+        )
+
+    def serializein(self, state):
+        W,H = state.board_shape; return ((self.dir_id * 2 + self.half) * W + self.src[0]) * H + self.src[1]
+    
+    def __str__(self):
+        return str((self.src,self.dir,self.half))
+
 class PlayerState(object):
     def __init__(self, board_grd, board_ctr, board_arm, board_obs, num_players, turn, armies, dead=False, done=False):
         self.board_shape = board_grd.shape; assert(board_obs.shape==self.board_shape); assert(board_ctr.shape==self.board_shape); assert(board_arm.shape==self.board_shape)
@@ -127,21 +146,18 @@ class PlayerState(object):
     def ArmyControlled(self):
         return sum([self.arm[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])/float(sum(self.armies))
 
-class PlayerAction(object):
-    def __init__(self, src, dir, half=False):
-        assert(tuple(dir) in C.MOVEABLE_DIRECTIONS)
-        self.src = src; self.dir = dir; self.dst = (src[0]+dir[0],src[1]+dir[1]); self.half = half
-    
-    def IsAvailableIn(self, state, player_id=0):
-        return (
-            (0<=self.dst[0]<state.board_shape[0] and 0<=self.dst[1]<state.board_shape[1])       # in the board
-        and (state.ctr[self.src[0]][self.src[1]]==player_id+C.BOARD_SELF)                       # controlled by oneself
-        and (state.grd[self.dst[0]][self.dst[1]]!=C.LAND_MOUNTAIN)                              # not moving to mountain
-        and (state.arm[self.src[0]][self.src[1]]>1)                                             # have army to move
-        )
-    
-    def __str__(self):
-        return str((self.src,self.dir,self.half))
+    def AvailableActions(self, serialize=True):
+        available_actions = []
+        for i in range(self.board_shape[0]):
+            for j in range(self.board_shape[1]):
+                for t in C.MOVEABLE_DIRECTIONS:
+                    for h in [True, False]:
+                        act = PlayerAction((i,j),t,h)
+                        if act.IsAvailableIn(self):
+                            available_actions.append(
+                               act.serializein(self) if serialize else act
+                            )
+        return available_actions
 
 class BoardState(object):
     def __init__(self, true_board_grd=None, true_board_ctr=None, true_board_arm=None, board_obss=None, turn=0, dead=None):
