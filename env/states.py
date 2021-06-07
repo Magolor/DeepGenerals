@@ -62,7 +62,7 @@ def NewRandomMap(W, H, num_players=2, p_mountain=0.2, p_city=0.05):
 
 class PlayerAction(object):
     def __init__(self, src, dir, half=False):
-        assert(tuple(dir) in C.MOVEABLE_DIRECTIONS); self.dir_id = self.MOVEABLE_DIRECTIONS_ID[dir]
+        assert(tuple(dir) in C.MOVEABLE_DIRECTIONS); self.dir_id = C.MOVEABLE_DIRECTIONS_ID[dir]
         self.src = src; self.dir = dir; self.dst = (src[0]+dir[0],src[1]+dir[1]); self.half = half
 
     def IsAvailableIn(self, state, player_id=0):
