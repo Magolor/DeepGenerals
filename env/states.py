@@ -1,5 +1,6 @@
 import sys
 import gym
+from numpy.lib.arraysetops import isin
 from utils import *
 
 from env.const import C
@@ -82,7 +83,7 @@ class PlayerAction(object):
 class PlayerState(object):
     def __init__(self, board_grd, board_ctr, board_arm, board_obs, num_players, turn, armies, dead=False, done=False):
         self.board_shape = board_grd.shape; assert(board_obs.shape==self.board_shape); assert(board_ctr.shape==self.board_shape); assert(board_arm.shape==self.board_shape)
-        self.grd = board_grd; self.obs = board_obs; self.ctr = board_ctr; self.arm = board_arm; self.num_players = num_players; self.turn = turn; self.armies = armies; self.dead=dead; self.done = done
+        self.grd = board_grd; self.obs = board_obs; self.ctr = board_ctr; self.arm = board_arm; self.num_players = num_players; self.turn = turn; self.armies = armies; self.dead = dead; self.done = done
     
     def copy(self):
         return PlayerState(self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obs.copy(),self.num_players,self.turn,list(self.armies),self.dead,self.done)
@@ -104,19 +105,14 @@ class PlayerState(object):
         return torch.stack(map_data + stat_data,dim=0).float()
     
     def Score(self):
-        if self.dead:
-            reward = -25.
-        elif self.done:
-            reward = 25.
-        else:
-            W,H = self.board_shape
-            reward = 0.
-            reward += self.ArmyControlled() * 25            # 25  * 0.5             
-            reward += self.CapitalObserved() * 10           # 0                     
-            reward += self.CityControlled() * 5             # 5   * 1               
-            reward += self.CityObserved() * 1               # 1   * 1               
-            reward += self.LandControlled() * 25 / (W*H)    # 1                     
-            reward += self.LandObserved() * 5 / (W*H)       # 5   * 1/3             
+        W,H = self.board_shape
+        reward = 0.
+        reward += self.ArmyControlled() * 25            # 25  * 0.5             
+        # reward += self.CapitalObserved() * 10           # 0                     
+        reward += self.CityControlled() * 5             # 5   * 1               
+        # reward += self.CityObserved() * 1               # 1   * 1               
+        reward += self.LandControlled() * 25 / (W*H)    # 1                     
+        # reward += self.LandObserved() * 5 / (W*H)       # 5   * 1/3             
         return reward * C.REWARD_SCALE
 
     def CityControlled(self):
@@ -169,11 +165,8 @@ class BoardState(object):
     def serialize(self):
         return (self.grd.copy(),self.ctr.copy(),self.arm.copy(),list(obs.copy() for obs in self.obss),self.turn,list(self.dead))
 
-    def unserialize(self, board_state):
-        self = BoardState(*board_state); return self
-
     def copy(self):
-        return BoardState().unserialize(self.serialize())
+        return BoardState(*self.serialize())
 
     def GetPlayerState(self, player_id):
         assert(0<=player_id<self.num_players); grd,ctr,arm,obs = self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obss[player_id].copy()

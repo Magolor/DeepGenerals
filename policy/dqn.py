@@ -34,7 +34,7 @@ def get_dqn_policy(cfg, input_shape, action_space, name = 'CartPole'):
         net = model.AdaptNetwork(head, backbone).to(cfg.device)
         optim = Adam(net.parameters(), lr=1e-4, weight_decay=5e-5)
         def single_policy(net, optim):
-            policy = ts.policy.DQNPolicy(net, optim, estimation_step=6, target_update_freq=160)
+            policy = ts.policy.DQNPolicy(net, optim, estimation_step=12, target_update_freq=320)
             return policy
             # multiagent
         policy = MultiAgentPolicyManager(

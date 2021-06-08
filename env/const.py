@@ -31,5 +31,5 @@ class C:
     FEATURES = 16
     NUM_FRAME = 8
     MAX_TURN = 1000
-    REWARD_SCALE = 10
+    REWARD_SCALE = 1
     TIME_PUNISHMENT = 1e-4

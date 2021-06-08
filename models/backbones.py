@@ -4,6 +4,7 @@ from torch import nn
 from timm.models.densenet import densenet121
 from timm.models.resnet import resnet34
 from timm.models.layers import DropPath, to_2tuple, trunc_normal_
+from torch.nn.modules.batchnorm import BatchNorm2d
 from torchvision.models.segmentation.segmentation import IntermediateLayerGetter
 import torch.nn.functional as F
 from torchvision.models.densenet import _DenseBlock,_Transition
@@ -98,6 +99,8 @@ class FCNBackbone(backbone):
     def __init__(self, in_channels):
         super(FCNBackbone, self).__init__(False, False)
         self.stem = PixelMlp(in_channels,256, 64)
+        self.bn = nn.BatchNorm2d(64)
+        self.act = nn.ReLU(inplace=True)
         self.stage1 = _DenseBlock(4, 64, 4 ,16 ,0 ,True)
         channels = 64 + 4*16
         self.cbr = CBR(channels, channels)
@@ -106,7 +109,7 @@ class FCNBackbone(backbone):
 
     def forward(self, x):
         x = self.preprocess(x, self.get_device())
-        x = self.stem(x)
+        x = self.act(self.bn(self.stem(x)))
         x = self.stage2(self.cbr(self.stage1(x)))
         return x
 
@@ -143,8 +146,6 @@ class SelfAttnBackbone(backbone):
 
     def out_stride(self):
         return 1
-
-
 
 if __name__ == '__main__':
     model = SelfAttnBlock(128,(10,10),32)

@@ -14,11 +14,11 @@ class GeneralsMultiAgentEnv(gym.Env):
     def __init__(
         self,
         map0 = None,
-        Ws = [6,5,4,3],
-        Hs = [5,4,3],
+        Ws = [8,7,6],
+        Hs = [8,7,6],
         num_players = 2,
         p_mountain = 0.2,
-        p_city = 0.05,
+        p_city = 0.04,
         army_generator = UniformArmyGenerator(25,101),
         **kwargs
     ):
