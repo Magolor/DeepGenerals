@@ -79,6 +79,7 @@ class MultiAgentPolicyManager(BasePolicy):
         act = batch.act[:, agent_id] if isinstance(batch.act, np.ndarray) else batch.act
         rew = batch.rew[:, agent_id] if isinstance(batch.rew, np.ndarray) else batch.rew
         god = None if not hasattr(batch.obs, 'god') else batch.obs.god[:, agent_id]
+        board = batch.obs.board if hasattr(batch.obs,'board') else None
         net_batch = Batch({
             'obs': obs,
             'done': batch.done,
@@ -86,7 +87,8 @@ class MultiAgentPolicyManager(BasePolicy):
             'policy': batch.policy,
             'rew': rew,
             'act': act,
-            'obs_next': obs_next
+            'obs_next': obs_next,
+            'board': board
         })
         return net_batch, god
 
@@ -143,25 +145,38 @@ class MultiAgentPolicyManager(BasePolicy):
 
             agent_index = policy.agent_id -1
             tmp_batch, god = self.get_agent_batch(batch,agent_index)
-            if np.random.rand()> self.rate:
-                out = policy(batch=tmp_batch, state=None if state is None
-                         else state["agent_" + str(policy.agent_id)],
-                         **kwargs)
-            else:
-                acts = []
-                logits = []
-                device = tmp_batch.obs.device
-                for b, g in enumerate(god):
+
+            # compute action
+            acts = []
+            logits = []
+            out = None
+            if np.random.rand() > self.rate:
+                raw_out = policy(batch=tmp_batch, state=None if state is None
+                else state["agent_" + str(policy.agent_id)],
+                             **kwargs)
+                # mask-out infeasible actions
+                mask = []
+                for g in god:
                     act_lists = g.AvailableActions(serialize = True)
+                    mask.append([(i in act_lists) for i in range(np.prod(g.board_shape)*8)])
+                logits = raw_out.logits.cpu() * torch.tensor(mask,dtype=torch.float)
+                acts = torch.argmax(logits,dim = 1).cpu().numpy()
+                out = Batch(act = acts,
+                            logtis = logits,
+                            state = None)
+            # explore
+            else:
+                for b, g in enumerate(god):
+                    act_lists = g.AvailableActions(serialize=True)
                     act_lists.append(0)
                     act = np.random.choice(act_lists)
                     logit = torch.zeros(size = (np.prod(g.board_shape)*8,), dtype = torch.float)
                     logit[act] = 1
                     acts.append(act)
                     logits.append(logit)
-                out = Batch(act = np.array(acts),
-                            logits = torch.stack(logits,dim=0).to(device = device),
-                            state = None)
+                    out = Batch(act = np.array(acts),
+                                logits = torch.stack(logits,dim=0),
+                                state = None)
 
             act = out.act
             each_state = out.state \

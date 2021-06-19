@@ -77,14 +77,14 @@ class GeneralsAdapter(GeneralsMultiAgentEnv):
     def reset(self, replay_id=None):
         if replay_id is None and self.auto_replay_id:
             replay_id = self.name+"_"+DATETIME()+"_"+RANDSTRING(8)
-        super(GeneralsAdapter, self).reset(replay_id); obs, _, _, info = self.last(); god = info.pop('god')
-        return Batch(obs = [torch.cat([f.serialize() for f in o],dim=0) for o in obs], agent_id = list(range(1,self.num_players+1)), god = god, wtf = 0)
+        super(GeneralsAdapter, self).reset(replay_id); obs, _, _, info = self.last(); god = info.pop('god'); board = info.pop('board')
+        return Batch(obs = [torch.cat([f.serialize() for f in o],dim=0) for o in obs], agent_id = list(range(1,self.num_players+1)), god = god, board = board,wtf = 0)
 
     def step(self, actions):
         actions = ActionSpaceToActions(actions, self.Wmax, self.Hmax)
         super(GeneralsAdapter, self).step(actions)
-        obs, reward, done, info = self.last(); god = info.pop('god')
-        return Batch(obs = [torch.cat([f.serialize() for f in o],dim=0) for o in obs], agent_id = list(range(1,self.num_players+1)), god = god, wtf = 0), reward, done, info
+        obs, reward, done, info = self.last(); god = info.pop('god'); board = info.pop('board')
+        return Batch(obs = [torch.cat([f.serialize() for f in o],dim=0) for o in obs], agent_id = list(range(1,self.num_players+1)), god = god, board = board, wtf = 0), reward, done, info
 
 def create_generals_env(name = "default", auto_replay_id = True):
     env = GeneralsAdapter(name = name, auto_replay_id = auto_replay_id)

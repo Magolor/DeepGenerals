@@ -46,7 +46,7 @@ class GeneralsMultiAgentEnv(gym.Env):
         for i in range(self.num_players)
         ]
         done = done or force_done
-        self.step_result = (new_observations, rewards, done, {'god':[self.state.GetPlayerState(i) for i in range(self.num_players)]})
+        self.step_result = (new_observations, rewards, done, {'god':[self.state.GetPlayerState(i) for i in range(self.num_players)],'board':[self.state]})
         if done:
             self.save_replay()
     
@@ -82,7 +82,7 @@ class GeneralsMultiAgentEnv(gym.Env):
                 self.map, army_generator = self.army_generator
             )
         self.history = [self.state.copy() for _ in range(C.NUM_FRAME)]
-        self.step_result = ([[h.GetPlayerState(i) for h in self.history[-C.NUM_FRAME:]] for i in range(self.num_players)], None, None, {'god':[self.state.GetPlayerState(i) for i in range(self.num_players)]})
+        self.step_result = ([[h.GetPlayerState(i) for h in self.history[-C.NUM_FRAME:]] for i in range(self.num_players)], None, None, {'god':[self.state.GetPlayerState(i) for i in range(self.num_players)], 'board':self.state})
         self.replay_id = replay_id
         return self.step_result
 

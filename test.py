@@ -9,3 +9,5 @@ print(model)
 x = torch.randn((1, 128, 80, 80)).to('cuda:1')
 out = model(x)
 print(out.size())
+
+
