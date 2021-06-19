@@ -1,4 +1,4 @@
-import env
+from env.states import PlayerActionFromID
 
 class BaseAgent(object):
     def __init__(self, **kwargs):
@@ -7,6 +7,6 @@ class BaseAgent(object):
     def reset(self, agent_id):
         self.agent_id = agent_id
 
-    def get_action(self, obs, board_state=None, **info):
-        # return PlayerAction type or None
+    def get_action(self, obs, **info):
+        # return int type or None
         return None

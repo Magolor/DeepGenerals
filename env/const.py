@@ -28,7 +28,7 @@ class C:
     OBSERVABLE_DIRECTIONS = ((-1,-1),(-1,0),(-1,1),(0,-1),(0,0),(0,1),(1,-1),(1,0),(1,1))
 
     # NN utils
-    FEATURES = 16
+    FEATURES = 18
     NUM_FRAME = 8
     MAX_TURN = 1000
     REWARD_SCALE = 1

@@ -62,7 +62,7 @@ def NewRandomMap(W, H, num_players=2, p_mountain=0.2, p_city=0.05):
     return M
 
 class PlayerAction(object):
-    def __init__(self, src, dir, half=False):
+    def __init__(self, src=0, dir=0, half=False):
         assert(tuple(dir) in C.MOVEABLE_DIRECTIONS); self.dir_id = C.MOVEABLE_DIRECTIONS_ID[dir]
         self.src = src; self.dir = dir; self.dst = (src[0]+dir[0],src[1]+dir[1]); self.half = half
 
@@ -79,6 +79,14 @@ class PlayerAction(object):
     
     def __str__(self):
         return str((self.src,self.dir,self.half))
+
+def PlayerActionFromID(act, shape):
+    W, H  = shape
+    if act is not None:
+        w = act % (W*H) // H; h = act % H; half = act // (W*H) % 2; dir = act // (W*H) // 2
+        return PlayerAction((w,h),C.MOVEABLE_DIRECTIONS[dir],half=half)
+    else:
+        return None
 
 class PlayerState(object):
     def __init__(self, board_grd, board_ctr, board_arm, board_obs, num_players, turn, armies, dead=False, done=False):
