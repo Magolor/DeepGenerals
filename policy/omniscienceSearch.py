@@ -1,12 +1,33 @@
 import tianshou as ts
 from tianshou.policy import BasePolicy
 from tianshou.data import Batch
-import numpy as np
+
+def greedyActions(state, agent_index):
+    player_state = state.GetPlayerState(agent_index)
+    pre_score = player_state.Score()
+    act_lists = player_state.AvailableActions(serialize=False)
+    best_reward = -1e10
+    best_act = 0
+    for act in act_lists:
+        move = [None] * state.num_players
+        move[agent_index] = act
+        next_state, _ = state.GetNextState(moves=move)
+        next_player_state = next_state.GetPlayerState(agent_index)
+        score = next_player_state.Score()
+        if score - pre_score > best_reward:
+            best_act = act.serializein(state)
+            best_reward = score - pre_score
+        #print(f"best:{best_reward}")
+        #print(f"score: {score, pre_score}")
+    return best_act
 
 
 class OmniscienceSearch(BasePolicy):
-    def __init__(self):
+    def __init__(self, step = 1):
         super(OmniscienceSearch, self).__init__()
+
+    def set_eps(self, rate):
+        pass
 
     def forward(
             self,
@@ -25,22 +46,10 @@ class OmniscienceSearch(BasePolicy):
         """
         agent_index = self.agent_id - 1
         acts = []
-        for board, playerState in zip(batch.board,batch.god):
-            pre_score = playerState.Score()
-            act_lists = playerState.AvailableActions(serialize=False)
-            best_act = None
-            best_reward = 0
-            for act in act_lists:
-                move = [None]* board.num_players
-                move[agent_index] = act
-                state, _ = board.GetNextState(moves=move)
-                nextState = state.GetPlayerState(self, agent_index)
-                score = nextState.Score()
-                if score-pre_score>best_reward:
-                    best_act = act.serializein(board)
-                    best_reward = score-pre_score
-            acts.append(best_act)
-        return Batch(act = acts,logits= None)
+        for board in batch.board:
+            act = greedyActions(board,agent_index)
+            acts.append(act)
+        return Batch(act = acts,logits= None, state = None)
 
     def learn(self, batch: Batch, **kwargs):
         """Update policy with a given batch of data.
@@ -63,4 +72,4 @@ class OmniscienceSearch(BasePolicy):
             1]" shape. The auto-broadcasting of numerical operation with torch
             tensors will amplify this error.
         """
-        pass
+        return {'loss':0.0}

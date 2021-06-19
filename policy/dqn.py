@@ -6,6 +6,7 @@ from torch.optim import SGD, Adam
 from models import actionHead, backbones, model
 import tianshou as ts
 from policy.mapolicy import MultiAgentPolicyManager
+from policy.omniscienceSearch import OmniscienceSearch
 
 
 def get_dqn_policy(cfg, input_shape, action_space, name = 'CartPole'):
@@ -38,7 +39,8 @@ def get_dqn_policy(cfg, input_shape, action_space, name = 'CartPole'):
             return policy
             # multiagent
         policy = MultiAgentPolicyManager(
-            [single_policy(net, optim) for _ in range(cfg.num_agents)]
+            #[single_policy(net, optim) for _ in range(cfg.num_agents)]
+            [single_policy(net, optim) for _ in range(cfg.num_agents - 1)]+ [OmniscienceSearch()]
         )
     return policy
 

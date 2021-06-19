@@ -112,7 +112,10 @@ class PlayerState(object):
         reward += self.CityControlled() * 5             # 5   * 1               
         # reward += self.CityObserved() * 1               # 1   * 1               
         reward += self.LandControlled() * 25 / (W*H)    # 1                     
-        # reward += self.LandObserved() * 5 / (W*H)       # 5   * 1/3             
+        # reward += self.LandObserved() * 5 / (W*H)       # 5   * 1/3
+        #print(reward)
+        #print(self.ArmyControlled(),self.CityControlled(),self.LandControlled())
+        #print(W,H)
         return reward * C.REWARD_SCALE
 
     def CityControlled(self):

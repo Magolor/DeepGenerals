@@ -220,13 +220,13 @@ def Replay(replay_id, offset = C.NUM_FRAME-1, framerate = 10):
     else:
         replay_path = "replays/"+replay_id
     replay_file = open(replay_path,"rb")
-    replay = [BoardState().unserialize(h) for h in pickle.load(replay_file)][offset:]
+    replay = [BoardState(*h) for h in pickle.load(replay_file)][offset:]
     app = QApplication(sys.argv); apply_stylesheet(app, theme='light_blue.xml', extra=EXTRA)
     gui = GUI(replay, framerate = framerate); app.exec_()
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-i", dest="id", help="Replay ID", type=str, default="First_2021-06-07[19.17.46]_JJM0A4JW.replay")
+    parser.add_argument("-i", dest="id", help="Replay ID", type=str, default="First_2021-06-19[21.48.24]_IRRV7KCW")
     parser.add_argument("-f", dest="framerate", help="Turn per Sec", type=int, default=20)
     args = parser.parse_args()
     Replay(args.id, framerate=args.framerate)
