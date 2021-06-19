@@ -63,8 +63,11 @@ def create_kaz_env(**kwargs):
 def ActionSpaceToActions(batch, W, H):
     acts = []
     for act in batch:
-        w = act % (W*H) // H; h = act % H; half = act // (W*H) % 2; dir = act // (W*H) // 2
-        acts.append(PlayerAction((w,h),C.MOVEABLE_DIRECTIONS[dir],half=half))
+        if act is not None:
+            w = act % (W*H) // H; h = act % H; half = act // (W*H) % 2; dir = act // (W*H) // 2
+            acts.append(PlayerAction((w,h),C.MOVEABLE_DIRECTIONS[dir],half=half))
+        else:
+            acts.append(act)
     return acts
 
 class GeneralsAdapter(GeneralsMultiAgentEnv):
@@ -89,6 +92,10 @@ class GeneralsAdapter(GeneralsMultiAgentEnv):
 def create_generals_env(name = "default", auto_replay_id = True):
     env = GeneralsAdapter(name = name, auto_replay_id = auto_replay_id)
     return env
+
+VALID_ENV_IDS = {"kaz": create_kaz_env, "generals": create_generals_env}
+def env(ID, **kwargs):
+    assert(ID in VALID_ENV_IDS); return VALID_ENV_IDS[ID](**kwargs)
 
 if __name__=="__main__":
     pass
