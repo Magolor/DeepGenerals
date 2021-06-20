@@ -77,7 +77,6 @@ class GUI(QWidget):
         self.InitUI()
 
     def Update(self, board):
-        print("Update Called.")
         self.board = board
         self.state = 0
         self.update()
@@ -85,6 +84,8 @@ class GUI(QWidget):
         while self.state != 2:
             self.parent.app.processEvents()
             time.sleep(0.01)
+        if self.action.IsAvailableIn(board.GetPlayerState(self.current_player-1)):
+            self.selected = self.action.dst
         return self.action
 
     def Board(self):
@@ -108,23 +109,22 @@ class GUI(QWidget):
         self.action = PlayerAction((0,0),(0,0),0); self.state = 2
 
     def LF(self):
-        if self.state==1:
+        if self.selected is not None:
             self.action = PlayerAction(self.selected,C.MOVEABLE_DIRECTIONS[0],0); self.state = 2
 
     def DN(self):
-        if self.state==1:
+        if self.selected is not None:
             self.action = PlayerAction(self.selected,C.MOVEABLE_DIRECTIONS[1],0); self.state = 2
 
     def RT(self):
-        if self.state==1:
+        if self.selected is not None:
             self.action = PlayerAction(self.selected,C.MOVEABLE_DIRECTIONS[2],0); self.state = 2
 
     def UP(self):
-        if self.state==1:
+        if self.selected is not None:
             self.action = PlayerAction(self.selected,C.MOVEABLE_DIRECTIONS[3],0); self.state = 2
 
     def SELECT(self, x, y):
-        print(self.state, "Select: (%d,%d)"%(x,y))
         if self.state==0:
             self.selected = (x,y); self.state = 1
             self.update()
@@ -159,7 +159,7 @@ class GUI(QWidget):
                 qp.setPen(QPen(Qt.black, 3+2*(self.state==1 and (i,j)==self.selected)))
                 if self.state==1 and (i,j)==self.selected:
                     qp.setBrush(SELECTED)
-                elif self.state==1 and PlayerAction(self.selected,(i-self.selected[0],j-self.selected[1]),0).dir_id!=-1:
+                elif (self.state==1 and PlayerAction(self.selected,(i-self.selected[0],j-self.selected[1]),0).dir_id!=-1) or (self.state==0 and self.selected==(i,j)):
                     qp.setBrush(COULD_SELECT)
                 else:
                     qp.setBrush(COLORS[color])
