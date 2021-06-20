@@ -1,8 +1,9 @@
+from .base import *
 import time
 import pickle
 import argparse
 from utils import *
-from env.states import BoardState, PlayerState
+from env.states import BoardState, PlayerState, PlayerAction
 from env.const import C
 
 import sys
@@ -15,7 +16,9 @@ from functools import partial
 import numpy as np
 
 COLORS = [QColor(0, 0, 0, 128), QColor(245, 222, 179, 128), QColor(255, 0, 0, 128), QColor(0, 0, 255, 128), QColor(0, 255, 0, 128)]
+SELECTED = QColor(255, 255, 0, 144); COULD_SELECT = QColor(255, 255, 0, 96)
 LANDSCAPES = [None,None,'mountains.png','house.png','crown.png']
+PLAYER_NAME = [None, 'Red', 'Blue', 'Green']
 EXTRA = {
     # Button colors
     'danger': '#dc3545',
@@ -27,71 +30,59 @@ EXTRA = {
     'line_height': '14px',
 }
 
-class QTimerWithPause(QTimer):
-    def __init__(self, parent = None):
-        QTimer.__init__(self, parent)
-        self.startTime = 0
-        self.interval = 0
-    def startTimer(self, interval):
-        self.interval = interval
-        if not self.isActive():
-            self.startTime = time.time()
-            self.start(interval)
-    def pauseTimer(self):
-        if self.isActive():
-            self.stop()
-            elapsedTime = self.startTime - time.time()
-            self.startTime -= elapsedTime
-            self.interval -= int(elapsedTime*1000)
-
 class GUI(QWidget):
-    def __init__(self, replay, framerate=2):
+    def __init__(self, board, agent_id, parent):
         super(GUI, self).__init__()
-        assert(len(replay)>1)
-        self.num_turns = len(replay)-1
-        self.shape = replay[0].board_shape
+        self.num_turns = board.turn
+        self.shape = board.board_shape
         self.W, self.H = (1280, 720)
         self.b = int(min(self.W*0.775/(self.shape[0]+1),self.H*0.950/(self.shape[1]+1)))
         self.font_size = self.b//8
-        self.replay = replay
-        self.active = False
-        self.turn = 0
+        self.turn = board.turn
+        self.board = board
+        self.current_player = agent_id+1
+        self.state = 2
+        self.selected = None
+        self.parent = parent
 
         self.font = QFont('Consolas',self.font_size); self.font.setBold(True)
 
-        next = QPushButton("NEXT",self); next.setProperty('class', 'default'); next.clicked.connect(self.NEXT)
-        next.move(int(self.W*0.85),int(self.H*0.05)); next.resize(int(self.W*0.1),int(self.H*0.1))
-        next_sc = QShortcut(QKeySequence('Right'), self); next_sc.activated.connect(self.NEXT)
-        prev = QPushButton("PREV",self); prev.setProperty('class', 'default'); prev.clicked.connect(self.PREV)
-        prev.move(int(self.W*0.85),int(self.H*0.15)); prev.resize(int(self.W*0.1),int(self.H*0.1))
-        prev_sc = QShortcut(QKeySequence( 'Left'), self); prev_sc.activated.connect(self.PREV)
+        exit = QPushButton("CHEAT",self); exit.setProperty('class', 'warning'); exit.clicked.connect(self.CHEAT)
+        exit.move(int(self.W*0.85),int(self.H*0.65)); exit.resize(int(self.W*0.1),int(self.H*0.1))
 
-        exit = QPushButton("START",self); exit.setProperty('class', 'success'); exit.clicked.connect(self.START)
-        exit.move(int(self.W*0.85),int(self.H*0.25)); exit.resize(int(self.W*0.1),int(self.H*0.1))
-        exit = QPushButton("PAUSE",self); exit.setProperty('class', 'warning'); exit.clicked.connect(self.PAUSE)
-        exit.move(int(self.W*0.85),int(self.H*0.35)); exit.resize(int(self.W*0.1),int(self.H*0.1));
-        next_sc = QShortcut(QKeySequence('Space'), self); next_sc.activated.connect(self.SWITCH)
-
-        self.num_players = 2; self.current_player = 0
-        for player in range(self.num_players+1):
-            p = QPushButton("PLAYER %d"%player if player else "GOD",self); p.setProperty('class', 'default' if player else 'warning'); p.clicked.connect(partial(self.PLAYER,player))
-            p.move(int(self.W*0.85),int(self.H*(0.45+player*0.1))); p.resize(int(self.W*0.1),int(self.H*0.1))
-            player_sc = QShortcut(QKeySequence('%d'%player), self); player_sc.activated.connect(partial(self.PLAYER,player))
+        exit = QPushButton("SKIP",self); exit.setProperty('class', 'success'); exit.clicked.connect(self.SKIP)
+        exit.move(int(self.W*0.85),int(self.H*0.75)); exit.resize(int(self.W*0.1),int(self.H*0.1))
+        exit_sc = QShortcut(QKeySequence('Space'), self); exit_sc.activated.connect(self.SKIP)
 
         exit = QPushButton("EXIT",self); exit.setProperty('class', 'danger'); exit.clicked.connect(self.EXIT)
         exit.move(int(self.W*0.85),int(self.H*0.85)); exit.resize(int(self.W*0.1),int(self.H*0.1))
         exit_sc = QShortcut(QKeySequence('Escape'), self); exit_sc.activated.connect(self.EXIT)
+        buttons = []
+        for i in range(self.shape[0]):
+            for j in range(self.shape[1]):
+                x,y = self.PosToPix(i,j)
+                buttons.append(QPushButton("CLICK(%d,%d)"%(i,j), self))
+                transp = QGraphicsOpacityEffect()
+                transp.setOpacity(0.0)
+                buttons[-1].setGraphicsEffect(transp)
+                buttons[-1].setGeometry(x,y,self.b,self.b)
+                buttons[-1].clicked.connect(partial(self.SELECT,i,j))
         
-        pgup_sc = QShortcut(QKeySequence('PgUp'), self); pgup_sc.activated.connect(self.BEGIN)
-        pgdn_sc = QShortcut(QKeySequence('PgDown'), self); pgdn_sc.activated.connect(self.END)
-
-        self.framerate = framerate
-        self.timer = QTimerWithPause(self)
-        self.timer.timeout.connect(self.NEXT)
         self.InitUI()
 
+    def Update(self, board):
+        print("Update Called.")
+        self.board = board
+        self.state = 0
+        self.update()
+        self.repaint()
+        while self.state != 2:
+            self.parent.app.processEvents()
+            time.sleep(0.01)
+        return self.action
+
     def Board(self):
-        return self.replay[self.turn].GetPlayerState(self.current_player-1) if self.current_player else self.replay[self.turn]
+        return self.board.GetPlayerState(self.current_player-1) if self.current_player else self.board
 
     def PosToPix(self, x, y):
         return self.b+x*self.b, self.b+y*self.b
@@ -99,53 +90,25 @@ class GUI(QWidget):
     def PixToPos(self, x, y):
         return int((x-self.b)/self.b), int((y-self.b)/self.b)
 
-    def PLAYER(self, player):
-        self.current_player = player
+    def EXIT(self):
+        QCoreApplication.instance().quit(); exit(0)
+
+    def CHEAT(self):
+        self.current_player = 0
         self.update()
         self.repaint()
 
-    def START(self):
-        self.active = True
-        self.timer.startTimer(1000//self.framerate)
+    def SKIP(self):
+        self.action = PlayerAction((0,0),(0,0),0); self.state = 2
 
-    def PAUSE(self):
-        self.active = False
-        self.timer.pauseTimer()
-
-    def SWITCH(self):
-        if self.active:
-            self.PAUSE()
-        else:
-            self.START()
-
-    def EXIT(self):
-        QCoreApplication.instance().quit()
-
-    def NEXT(self):
-        if self.turn < self.num_turns:
-            self.turn += 1;
-            self.update()
-            self.repaint()
-
-    def PREV(self):
-        if self.turn > 0:
-            self.turn -= 1;
-            self.update()
-            self.repaint()
-
-    def BEGIN(self):
-        self.PAUSE()
-        if self.turn != 0:
-            self.turn = 0
-            self.update()
-            self.repaint()
-
-    def END(self):
-        self.PAUSE()
-        if self.turn != self.num_turns:
-            self.turn = self.num_turns
-            self.update()
-            self.repaint()
+    def SELECT(self, x, y):
+        print(self.state, "Select: (%d,%d)"%(x,y))
+        if self.state==0:
+            self.selected = (x,y); self.state = 1
+        elif self.state==1:
+            self.action = PlayerAction(self.selected,(x-self.selected[0],y-self.selected[1]),0); self.state = 2
+        self.update()
+        self.repaint()
 
     def paintEvent(self, e):
         qp = QPainter()
@@ -171,7 +134,13 @@ class GUI(QWidget):
                         color = 2
                 if isinstance(board,PlayerState) and board.obs[i][j]!=C.OBSERVING:
                     color = 0
-                qp.setBrush(COLORS[color])
+                qp.setPen(QPen(Qt.black, 3+2*(self.state==1 and (i,j)==self.selected)))
+                if self.state==1 and (i,j)==self.selected:
+                    qp.setBrush(SELECTED)
+                elif self.state==1 and PlayerAction(self.selected,(i-self.selected[0],j-self.selected[1]),0).dir_id!=-1:
+                    qp.setBrush(COULD_SELECT)
+                else:
+                    qp.setBrush(COLORS[color])
                 qp.drawRect(x,y,self.b,self.b)
 
                 landscape = LANDSCAPES[board.grd[i][j]]
@@ -214,19 +183,16 @@ class GUI(QWidget):
         self.setWindowTitle('Generals.io Simluator')
         self.show()
 
-def Replay(replay_id, offset = C.NUM_FRAME-1, framerate = 10):
-    if ".replay" not in replay_id:
-        replay_path = "replays/"+replay_id+".replay"
-    else:
-        replay_path = "replays/"+replay_id
-    replay_file = open(replay_path,"rb")
-    replay = [BoardState(*h) for h in pickle.load(replay_file)][offset:]
-    app = QApplication(sys.argv); apply_stylesheet(app, theme='light_blue.xml', extra=EXTRA)
-    gui = GUI(replay, framerate = framerate); app.exec_()
+class HumanAgent(BaseAgent):
+    def __init__(self, **kwargs):
+        self.cheat = kwargs.pop('cheat')
+        super(HumanAgent, self).__init__()
 
-if __name__=="__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-i", dest="id", help="Replay ID", type=str, default="PlayerFrameworkTesting_2021-06-19[23.16.47]_JZXMSMST.replay")
-    parser.add_argument("-f", dest="framerate", help="Turn per Sec", type=int, default=20)
-    args = parser.parse_args()
-    Replay(args.id, framerate=args.framerate)
+    def reset(self, agent_id, **kwargs):
+        self.board = kwargs.pop('obs').board
+        super(HumanAgent, self).reset(agent_id)
+        self.app = QApplication(sys.argv)# ; apply_stylesheet(self.app, theme='light_blue.xml', extra=EXTRA)
+        self.gui = GUI(self.board, self.agent_id, self)
+
+    def get_action(self, obs, **info):
+        return self.gui.Update(obs.board).serializein(obs.board)

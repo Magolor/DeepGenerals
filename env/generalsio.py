@@ -16,7 +16,7 @@ class GeneralsMultiAgentEnv(gym.Env):
         map0 = None,
         Ws = [8,7,6],
         Hs = [8,7,6],
-        num_players = 3,
+        num_players = 2,
         p_mountain = 0.2,
         p_city = 0.04,
         army_generator = UniformArmyGenerator(25,101),
