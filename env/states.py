@@ -117,11 +117,11 @@ class PlayerState(object):
     def Score(self):
         W,H = self.board_shape
         reward = 0.
-        reward += self.ArmyControlled() * 50           # 25  * 0.5
+        reward += self.ArmyControlled() * 25           # 25  * 0.5
         # reward += self.CapitalObserved() * 10           # 0                     
         reward += self.CityControlled() * 5             # 5   * 1               
         # reward += self.CityObserved() * 1               # 1   * 1               
-        reward += self.LandControlled() * 25 / (W*H)    # 1                     
+        reward += self.LandControlled() * 50 / (W*H)    # 1                     
         # reward += self.LandObserved() * 5 / (W*H)       # 5   * 1/3
         #print(reward)
         #print(self.ArmyControlled(),self.CityControlled(),self.LandControlled())

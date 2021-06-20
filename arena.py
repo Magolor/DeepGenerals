@@ -20,7 +20,7 @@ def play(agents, name="Default", auto_replay_id=True):
 
     for agent_id, result in enumerate([get_agent_batch(S,agent_id) for agent_id in range(len(agents))]):
         if agent_id not in result.board.dead:
-            print("Player %d wins!"%(agent_id+1))
+            return agent_id
 
 if __name__=="__main__":
     play([agents.MinimaxAgent(),agents.MinimaxAgent()], name="PlayerFrameworkTesting")
