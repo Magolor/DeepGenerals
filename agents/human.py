@@ -47,16 +47,22 @@ class GUI(QWidget):
 
         self.font = QFont('Consolas',self.font_size); self.font.setBold(True)
 
-        exit = QPushButton("CHEAT",self); exit.setProperty('class', 'warning'); exit.clicked.connect(self.CHEAT)
-        exit.move(int(self.W*0.85),int(self.H*0.65)); exit.resize(int(self.W*0.1),int(self.H*0.1))
+        if self.parent.cheat:
+            cheat = QPushButton("CHEAT",self); cheat.setProperty('class', 'warning'); cheat.clicked.connect(self.CHEAT)
+            cheat.move(int(self.W*0.85),int(self.H*0.55)); cheat.resize(int(self.W*0.1),int(self.H*0.1))
 
-        exit = QPushButton("SKIP",self); exit.setProperty('class', 'success'); exit.clicked.connect(self.SKIP)
-        exit.move(int(self.W*0.85),int(self.H*0.75)); exit.resize(int(self.W*0.1),int(self.H*0.1))
-        exit_sc = QShortcut(QKeySequence('Space'), self); exit_sc.activated.connect(self.SKIP)
+        skip = QPushButton("SKIP",self); skip.setProperty('class', 'success'); skip.clicked.connect(self.SKIP)
+        skip.move(int(self.W*0.85),int(self.H*0.65)); skip.resize(int(self.W*0.1),int(self.H*0.1))
+        skip_sc = QShortcut(QKeySequence('Space'), self); skip_sc.activated.connect(self.SKIP)
 
         exit = QPushButton("EXIT",self); exit.setProperty('class', 'danger'); exit.clicked.connect(self.EXIT)
         exit.move(int(self.W*0.85),int(self.H*0.85)); exit.resize(int(self.W*0.1),int(self.H*0.1))
         exit_sc = QShortcut(QKeySequence('Escape'), self); exit_sc.activated.connect(self.EXIT)
+        
+        lf_sc = QShortcut(QKeySequence( 'Left'), self); lf_sc.activated.connect(self.LF)
+        dn_sc = QShortcut(QKeySequence( 'Down'), self); dn_sc.activated.connect(self.DN)
+        rt_sc = QShortcut(QKeySequence('Right'), self); rt_sc.activated.connect(self.RT)
+        up_sc = QShortcut(QKeySequence(   'Up'), self); up_sc.activated.connect(self.UP)
         buttons = []
         for i in range(self.shape[0]):
             for j in range(self.shape[1]):
@@ -101,14 +107,30 @@ class GUI(QWidget):
     def SKIP(self):
         self.action = PlayerAction((0,0),(0,0),0); self.state = 2
 
+    def LF(self):
+        if self.state==1:
+            self.action = PlayerAction(self.selected,C.MOVEABLE_DIRECTIONS[0],0); self.state = 2
+
+    def DN(self):
+        if self.state==1:
+            self.action = PlayerAction(self.selected,C.MOVEABLE_DIRECTIONS[1],0); self.state = 2
+
+    def RT(self):
+        if self.state==1:
+            self.action = PlayerAction(self.selected,C.MOVEABLE_DIRECTIONS[2],0); self.state = 2
+
+    def UP(self):
+        if self.state==1:
+            self.action = PlayerAction(self.selected,C.MOVEABLE_DIRECTIONS[3],0); self.state = 2
+
     def SELECT(self, x, y):
         print(self.state, "Select: (%d,%d)"%(x,y))
         if self.state==0:
             self.selected = (x,y); self.state = 1
+            self.update()
+            self.repaint()
         elif self.state==1:
             self.action = PlayerAction(self.selected,(x-self.selected[0],y-self.selected[1]),0); self.state = 2
-        self.update()
-        self.repaint()
 
     def paintEvent(self, e):
         qp = QPainter()
