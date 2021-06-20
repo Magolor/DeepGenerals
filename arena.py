@@ -55,10 +55,11 @@ def evaluate_neural(pt_folder, round=23, start=1, device='cpu'):
     metrics = [NAME(agent) for agent in AGENT_POOL]; registrations = [('epoch',name,'greater') for name in metrics]
     with Tracker(title=name,DIR=os.path.join(pt_folder,"evaluate"),registrations=registrations) as T:
         for epoch, agent_pt in TQDM(agent_pts[start-1:],s=start):
-            assert(agent_pt=="Epoch%05d.pt"%epoch); agent = agents.NeuralAgent(path=os.path.join(root,agent_pt),device=device)
+            #assert(agent_pt=="Epoch%05d.pt"%epoch);
+            agent = agents.PPOAgent(path=os.path.join(root,agent_pt),device=device)
             for key, value in evaluate(agent, round):
                 T.update(key, value, epoch)
 
 if __name__=="__main__":
-    exp_name = "DG_First"
+    exp_name = "PPO_First"
     evaluate_neural(os.path.join("Experiment",exp_name),start=3)

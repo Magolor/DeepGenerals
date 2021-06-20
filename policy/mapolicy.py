@@ -34,7 +34,8 @@ class MultiAgentPolicyManager(BasePolicy):
             # agent_id 0 is reserved for the environment proxy
             # (this MultiAgentPolicyManager)
             policy.set_agent_id(i + 1)
-            policy.set_eps(0)
+            if hasattr(policy, 'set_eps'):
+                policy.set_eps(0)
         self.rate = 0
 
     def set_eps(self, rate):
@@ -236,7 +237,7 @@ class MultiAgentPolicyManager(BasePolicy):
             #data = batch[f"agent_{policy.agent_id}"]
             #if not data.is_empty():
             #data = self.get_agent_batch(batch, policy.agent_id-1)
-            out = policy.learn(batch=batch["agent_" + str(policy.agent_id) ], **kwargs)
+            out = policy.learn(batch=batch["agent_" + str(policy.agent_id) ], batch_size = 16, repeat = 1, **kwargs)
             for k, v in out.items():
                 results["agent_" + str(policy.agent_id) + "/" + k] = v
         return results

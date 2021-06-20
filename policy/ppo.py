@@ -8,6 +8,7 @@ from models import actionHead, backbones, model
 import tianshou as ts
 from itertools import chain
 from torch.distributions import Categorical
+from policy.mapolicy import MultiAgentPolicyManager
 
 
 
@@ -20,6 +21,23 @@ def get_ppo_policy(cfg, input_shape, action_space, name = 'CartPole'):
         ts.policy.PPOPolicy(actor,critic,optim = optim)
         policy = ts.policy.PPOPolicy(actor,critic,optim,dist_fn=lambda logits:Categorical(logits=logits))
 
+    if name == 'Generals':
+        backbone = backbones.FCNBackbone(input_shape[0])
+        critic_head = actionHead.criticHead((backbone.out_channels(), input_shape[1],input_shape[2]), action_space)
+        actor_head = actionHead.actorHead((backbone.out_channels(), input_shape[1],input_shape[2]), action_space)
+        actor = model.AdaptNetwork(actor_head, backbone).to(cfg.device)
+        critic = model.CriticNetwork(critic_head,backbone).to(cfg.device)
+        optim = torch.optim.Adam(chain(backbone.parameters(),actor_head.parameters(),critic_head.parameters()),
+                                 lr=1e-6, weight_decay=5e-5)
+
+        def single_policy(actor, critic, optim):
+            policy = ts.policy.PPOPolicy(actor,critic, optim, dist_fn=lambda logits:Categorical(logits=logits))
+            return policy
+            # multiagent
+
+        policy = MultiAgentPolicyManager(
+            [single_policy(actor, critic, optim) for _ in range(cfg.num_agents)]
+        )
 
     return policy
 

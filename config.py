@@ -54,7 +54,7 @@ def get_config(task = 'CartPole', exp_name = "default"):
             'episode_per_test': 5,
             'batch_size': 16,
             'update_per_step': 0.2,
-            'algo': 'dqn',
+            'algo': 'ppo',
             'device': 'cuda:1' if torch.cuda.is_available() else 'cpu'
         }
     elif task == 'Generals':
@@ -76,7 +76,7 @@ def get_config(task = 'CartPole', exp_name = "default"):
             'episode_per_test': 1,
             'batch_size': 128,
             'update_per_step': 0.10,
-            'algo': 'dqn',
+            'algo': 'ppo',
             'device': 'cuda' if torch.cuda.is_available() else 'cpu'
         }
 

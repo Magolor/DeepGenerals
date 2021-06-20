@@ -124,6 +124,7 @@ def offpolicy_trainer(
                 for i in range(round(update_per_step * result["n/st"])):
                     gradient_step += 1
                     losses = policy.update(batch_size, train_collector.buffer) #batch_size=batch_size,repeat = 10)
+                    losses = {'agent_1/loss':np.mean(losses['agent_1/loss']),'agent_2/loss':np.mean(losses['agent_2/loss'])}
                     tracker.track('train_losses', list(losses.values()))
                 describe = HIGHLIGHT(f"#{epoch} ")
                 if rewards is not None:

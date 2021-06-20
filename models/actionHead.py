@@ -59,6 +59,41 @@ class mlpHead(actionHead):
         logits = self.cls(x)
         return logits
 
+class actorHead(actionHead):
+    '''
+          preserve space info -> basic flatten
+          (B, C, H, W) -> (B, action_space, H, W) -> (B, action_space * H * W)
+       '''
+
+    def __init__(self, input_shape, action_space):
+        super(actorHead, self).__init__(input_shape, action_space // (input_shape[1] * input_shape[2]))
+        self.conv1 = nn.Conv2d(input_shape[0], 4*input_shape[0], 5,padding=2)
+        self.bn = nn.BatchNorm2d(4*input_shape[0])
+        self.relu = nn.ReLU(True)
+        self.conv2 = nn.Conv2d(4*input_shape[0],self.action_space,5,padding=2)
+
+
+    def forward(self, x, **kwargs):
+        x = self.preprocess(x, self.conv1.weight.device)
+        x = self.conv2(self.relu(self.bn(self.conv1(x))))
+        logits = torch.flatten(x, start_dim=1)
+        return logits
+
+class criticHead(actorHead):
+    '''
+             preserve space info -> basic flatten
+             (B, C, H, W) ->  (B, 1)
+          '''
+    def __init__(self, input_shape, action_space):
+        super(actorHead, self).__init__(input_shape, action_space // (input_shape[1] * input_shape[2]))
+        self.mlp = mlpHead((np.prod(input_shape),),1)
+
+    def forward(self, x, **kwargs):
+        x = self.preprocess(x, self.mlp.cls.weight.device)
+        x = torch.flatten(x, start_dim=1)
+        value = self.mlp(x)
+        return value
+
 
 if __name__ == '__main__':
     model = mlpHead(20)

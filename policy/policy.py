@@ -1,5 +1,6 @@
 from policy import dqn
 from policy import ppo
+from policy import sac
 #from policy import sac
 from policy.mapolicy import MultiAgentPolicyManager
 
@@ -12,8 +13,8 @@ def get_policy(cfg, input_shape, action_space, name = 'CartPole'):
     if cfg.algo == 'ppo':
         return ppo.get_ppo_policy(cfg, input_shape, action_space, name)
 
-    #if cfg.algo == 'sac':
-   #     return sac.get_sac_policy(cfg, input_shape, action_space, name)
+    if cfg.algo == 'sac':
+        return sac.get_sac_policy(cfg, input_shape, action_space, name)
 
 
 
