@@ -7,7 +7,7 @@ from pettingzoo.butterfly import knights_archers_zombies_v7
 from pettingzoo.utils import wrappers
 from gym.spaces import Discrete,MultiDiscrete
 from env.generalsio import GeneralsMultiAgentEnv
-from env.states import PlayerAction
+from env.states import PlayerActionFromID
 from env.const import C
 from utils import *
 
@@ -61,14 +61,7 @@ def create_kaz_env(**kwargs):
     return env
 
 def ActionSpaceToActions(batch, W, H):
-    acts = []
-    for act in batch:
-        if act is not None:
-            w = act % (W*H) // H; h = act % H; half = act // (W*H) % 2; dir = act // (W*H) // 2
-            acts.append(PlayerAction((w,h),C.MOVEABLE_DIRECTIONS[dir],half=half))
-        else:
-            acts.append(act)
-    return acts
+    return [PlayerActionFromID(act, (W,H)) for act in batch]
 
 class GeneralsAdapter(GeneralsMultiAgentEnv):
     def __init__(self, **kwargs):
