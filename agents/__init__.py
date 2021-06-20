@@ -1,3 +1,5 @@
 from .base import BaseAgent
-from .omni import OmniAgent
 from .human import HumanAgent
+from .greedy_dtm import DeterminedGreedyAgent
+from .greedy_rdm import RandomGreedyAgent
+from .minimax import MinimaxAgent

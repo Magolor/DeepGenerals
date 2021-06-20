@@ -58,7 +58,7 @@ class AlphaBetaSearch:
         return best_action
 
     @classmethod
-    def sampledMinmaxAction(cls, state:BoardState, agent_id, depth, truncated=True):
+    def sampledMinmaxAction(cls, state:BoardState, agent_id, depth, truncated=True, beta = 10):
         act_value = []
         best = -1e9
         player_state = state.GetPlayerState(agent_id)
@@ -74,7 +74,7 @@ class AlphaBetaSearch:
                 value = -cls.maxValue(-1e9, -best, 0, new_state, 1-agent_id, depth,truncated)
             act_value.append(value)
             best = max(best, value)
-        prob = softmax(torch.tensor(act_value), dim=0).tolist()
+        prob = softmax(torch.tensor(act_value) * beta, dim=0).tolist()
         select = np.random.choice(a=len(act_list), size=1, replace=False, p=prob).item()
         act = act_list[select].serializein(state)
         return act
@@ -100,7 +100,7 @@ def greedyActions(state, agent_index):
     return best_act
 
 
-def sampledGreedyActions(state, agent_index, number = 1, serialize = True):
+def sampledGreedyActions(state, agent_index, number = 1, serialize = True, beta = 10):
     player_state = state.GetPlayerState(agent_index)
     pre_score = player_state.Score()
     act_lists = player_state.AvailableActions(serialize=False)
@@ -115,7 +115,7 @@ def sampledGreedyActions(state, agent_index, number = 1, serialize = True):
         reward.append(score - pre_score)
         # print(f"best:{best_reward}")
         # print(f"score: {score, pre_score}")
-    prob = softmax(torch.tensor(reward),dim = 0).tolist()
+    prob = softmax(torch.tensor(reward) * beta,dim = 0).tolist()
     select = np.random.choice(a = len(act_lists),size = min(number,len(act_lists)),replace = False,p = prob)
     acts = np.array(act_lists)[select].tolist()
     return acts[0].serializein(state) if serialize else acts

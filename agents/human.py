@@ -33,11 +33,11 @@ EXTRA = {
 class GUI(QWidget):
     def __init__(self, board, agent_id, parent):
         super(GUI, self).__init__()
-        self.num_turns = board.turn
         self.shape = board.board_shape
         self.W, self.H = (1280, 720)
         self.b = int(min(self.W*0.775/(self.shape[0]+1),self.H*0.950/(self.shape[1]+1)))
         self.font_size = self.b//8
+        self.num_turns = board.turn
         self.turn = board.turn
         self.board = board
         self.current_player = agent_id+1
@@ -78,13 +78,15 @@ class GUI(QWidget):
 
     def Update(self, board):
         self.board = board
+        self.num_turns = board.turn
+        self.turn = board.turn
         self.state = 0
         self.update()
         self.repaint()
         while self.state != 2:
             self.parent.app.processEvents()
             time.sleep(0.01)
-        if self.action.IsAvailableIn(board.GetPlayerState(self.current_player-1)):
+        if self.action.IsAvailableIn(board.GetPlayerState(self.parent.agent_id)):
             self.selected = self.action.dst
         return self.action
 

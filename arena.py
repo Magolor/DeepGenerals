@@ -5,7 +5,7 @@ from tianshou.data import Batch
 def get_agent_batch(batch, agent_id):
     obs = batch.obs[agent_id].unsqueeze(0) if hasattr(batch, 'obs') else None
     board = batch.board[agent_id] if hasattr(batch,'board') else None
-    net_batch = Batch({'obs': obs, 'board': board})
+    net_batch = Batch({'obs': obs, 'board': board}); print(board.turn)
     return net_batch
 
 def play(agents, name="Default", auto_replay_id=True):
@@ -21,4 +21,4 @@ def play(agents, name="Default", auto_replay_id=True):
             print("Player %d wins!"%(agent_id+1))
 
 if __name__=="__main__":
-    play([agents.OmniAgent(),agents.HumanAgent(cheat=False)], name="PlayerFrameworkTesting")
+    play([agents.RandomGreedyAgent(),agents.HumanAgent(cheat=True)], name="PlayerFrameworkTesting")
