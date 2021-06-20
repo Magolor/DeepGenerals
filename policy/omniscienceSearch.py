@@ -6,10 +6,12 @@ from torch.distributions import Categorical
 from env.states import BoardState, PlayerAction
 from torch.nn.functional import softmax
 import numpy as np
+from tool import Timer
 
 class AlphaBetaSearch:
     iter = 0
     max_actions = 3
+    timer = Timer()
     @classmethod
     def maxValue(cls, alpha, beta, currentDepth, state,agent_id, depth, truncated=True):
         cls.iter +=1
@@ -30,7 +32,7 @@ class AlphaBetaSearch:
             move[agent_id] = act
             new_state, end = state.GetNextState(moves=move)
             if end:
-                value = new_state.GetPlayerState(agent_id).Score()-state.GetPlayerState(1-agent_id).Score()
+                value = new_state.GetPlayerState(agent_id).Score()-new_state.GetPlayerState(1-agent_id).Score()
             else:
                 value = -cls.maxValue(-beta, -alpha, currentDepth+1, new_state, 1 - agent_id,depth)
             if value >= beta:

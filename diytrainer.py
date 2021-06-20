@@ -150,8 +150,7 @@ def offpolicy_trainer(
             })
 
         # ??? to be update
-        save_fn(policy)
-
+        save_fn(policy, name = 'Epoch{:05d}.pt'.format(epoch))
         describe = HIGHLIGHT(f'Epoch #{epoch} Rewards:\n')
         for index, (rew_mean_i, rew_std_i) in enumerate(zip(rew_mean, rew_std)):
             describe += "ag{}: {:.4f} ± {:.4f}\n".format(index+1, rew_mean_i, rew_std_i)

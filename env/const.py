@@ -16,9 +16,9 @@ class C:
     OBSERVED = 1
     OBSERVING = 2
 
-    TURN_PER_NEW_ARMY_EMPTY = 50
-    TURN_PER_NEW_ARMY_CITY = 2
-    TURN_PER_NEW_ARMY_CAPITAL = 2
+    TURN_PER_NEW_ARMY_EMPTY = 25
+    TURN_PER_NEW_ARMY_CITY = 1
+    TURN_PER_NEW_ARMY_CAPITAL = 1
 
     def HAS_HOUSE(g):
         return g==C.LAND_CITY or g==C.LAND_CAPITAL
@@ -30,6 +30,6 @@ class C:
     # NN utils
     FEATURES = 16
     NUM_FRAME = 8
-    MAX_TURN = 300
+    MAX_TURN = 1000
     REWARD_SCALE = 1
     TIME_PUNISHMENT = 1e-4
