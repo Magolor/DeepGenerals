@@ -67,7 +67,7 @@ class PlayerAction(object):
         self.dir_id = -1 if dir not in C.MOVEABLE_DIRECTIONS else C.MOVEABLE_DIRECTIONS_ID[dir]
         self.src = src; self.dir = dir; self.dst = (src[0]+dir[0],src[1]+dir[1]); self.half = half
 
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    ##@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def IsAvailableIn(self, state, player_id=0):
         return (
             (0<=self.dst[0]<state.board_shape[0] and 0<=self.dst[1]<state.board_shape[1])       # in the board
@@ -76,7 +76,7 @@ class PlayerAction(object):
         and (state.arm[self.src[0]][self.src[1]]>1)                                             # have army to move
         )
 
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    ##@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def IsEffectiveIn(self, state, player_id=0):
         army = state.arm[self.src[0]][self.src[1]]-int(np.ceil(state.arm[self.src[0]][self.src[1]]/2.) if self.half else 1)
         return (
@@ -85,7 +85,7 @@ class PlayerAction(object):
         and (army > state.arm[self.dst[0]][self.dst[1]])
         )
 
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    ##@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def IsOffensiveIn(self, state, player_id=0):
         army = state.arm[self.src[0]][self.src[1]]-int(np.ceil(state.arm[self.src[0]][self.src[1]]/2.) if self.half else 1)
         return (
@@ -134,7 +134,7 @@ class PlayerState(object):
             stat_data.append(torch.ones_like(map_data[0]) * arm)
         return torch.stack(map_data + stat_data,dim=0).float()
 
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    ##@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def Score(self):
         W,H = self.board_shape
         reward = 0.
@@ -144,55 +144,55 @@ class PlayerState(object):
         # reward += self.CapitalObserved() * 10           # 0                     
         reward += self.CityControlled() * 50             # 5   * 1               
         # reward += self.CityObserved() * 1               # 1   * 1               
-        reward += self.LandControlled() * 3               # 1                     
+        reward += self.LandControlled() * 5               # 1
         # reward += self.LandObserved() * 5 / (W*H)       # 5   * 1/3
         #print(reward)
         #print(self.ArmyControlled(),self.CityControlled(),self.LandControlled())
         #print(W,H)
         return reward
 
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CityControlled(self):
         return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.ctr[i][j]==C.BOARD_SELF) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CityObserved(self):
         return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CityObserving(self):
         return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def LandControlled(self):
         return sum([(self.ctr[i][j]==C.BOARD_SELF) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def LandObserved(self):
         return sum([(self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def LandObserving(self):
         return sum([(self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CapitalObserved(self):
         return sum([(self.grd[i][j]==C.LAND_CAPITAL and self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
         
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CapitalObserving(self):
         return sum([(self.grd[i][j]==C.LAND_CAPITAL and self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def ArmyControlled(self):
         return sum([self.arm[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])/float(sum(self.armies))
 
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def ArmyStd(self):
         total = sum([self.arm[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF]); mean = 1/self.LandControlled()
         return sum([(self.arm[i][j]/total-mean)**2 for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])*mean
 
-    @numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def WeightedArmyControlled(self, iter=5):
         border = np.logical_and(self.ctr!=C.BOARD_SELF, self.grd!=2).astype(np.float); weight = border.copy()
         for _ in range(iter):
@@ -233,7 +233,7 @@ class BoardState(object):
     def copy(self):
         return BoardState(*self.serialize())
 
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    ##@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def GetPlayerState(self, player_id):
         assert(0<=player_id<self.num_players); grd,ctr,arm,obs = self.grd.copy(),self.ctr.copy(),self.arm.copy(),self.obss[player_id].copy()
         for i in range(self.board_shape[0]):
@@ -254,7 +254,7 @@ class BoardState(object):
                     arm[i][j] = 0
         return PlayerState(grd,ctr,arm,obs,self.num_players,self.turn,armies,player_id in self.dead,len(self.dead)>=self.num_players-1)
 
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    ##@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def GetNextState_(self, actions):
         self.turn += 1; assert(len(actions)==self.num_players)
         # Taking turns to move
@@ -308,7 +308,7 @@ class BoardState(object):
         # True if the game ends
         return len(self.dead)>=self.num_players-1
 
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    ##@numba.jit(fastmath=True,parallel=True,forceobj=True)
     def GetNextState(self, moves):
         S = self.copy(); endgame = S.GetNextState_(moves); return S, endgame
 

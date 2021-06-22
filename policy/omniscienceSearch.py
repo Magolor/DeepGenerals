@@ -107,12 +107,18 @@ class AlphaBetaSearch:
             move = [None] * state.num_players
             move[agent_id] = act
             new_state, end = state.GetNextState(moves=move)
-            for counter in range(depth * end):
+            #print(depth, end)
+            for counter in range(depth * (1-end)):
+                #print(counter)
                 new_move = [None] * new_state.num_players
+                c = agent_id if counter&1 else 1-agent_id
+                new_move[c] = sampledGreedyActions(new_state,c,1,False,5)[0]
+                '''
                 if counter % 2 == 0:
                     new_move[1-agent_id] = sampledAction(new_state,1-agent_id,1,False)
                 else:
                     new_move[agent_id] = sampledGreedyActions(new_state,agent_id,1,False,beta=beta)
+                '''
                 end = new_state.GetNextState_(actions=new_move)
                 if end:
                     break
