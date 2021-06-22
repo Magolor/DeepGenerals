@@ -325,7 +325,7 @@ class ArmyGenerator(object):
 class UniformArmyGenerator(ArmyGenerator):
     def __init__(self, l, r, seed=None):
         super(UniformArmyGenerator, self).__init__(seed); self.l = l; self.r = r
-    
+
     def __call__(self):
         return np.random.randint(self.l,self.r)
 
