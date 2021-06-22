@@ -1,3 +1,5 @@
+import numpy as np
+
 class C:
     # grd
     LAND_FOG = 0
@@ -22,6 +24,9 @@ class C:
 
     def HAS_HOUSE(g):
         return g==C.LAND_CITY or g==C.LAND_CAPITAL
+
+    def HAS_HOUSE_BATCH(g):
+        return np.logical_or(g==C.LAND_CITY,g==C.LAND_CAPITAL)
 
     MOVEABLE_DIRECTIONS = ((-1,0),(0,1),(1,0),(0,-1))
     MOVEABLE_DIRECTIONS_ID = {(-1,0):0, (0,1):1, (1,0):2, (0,-1):3}

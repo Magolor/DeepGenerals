@@ -32,7 +32,7 @@ class AlphaBetaSearch:
         for act in act_list:
             move = [None] * state.num_players
             move[agent_id] = act
-            new_state, end = state.GetNextState(moves=move)
+            new_state, end = state.GetNextState(actions=move)
             if end:
                 value = new_state.GetPlayerState(agent_id).Score()
             else:
@@ -51,7 +51,7 @@ class AlphaBetaSearch:
         act = act_list[np.random.randint(len(act_list))]
         move = [None] * state.num_players
         move[agent_id] = act
-        new_state, end = state.GetNextState(moves=move)
+        new_state, end = state.GetNextState(actions=move)
         if end:
             value = -new_state.GetPlayerState(1-agent_id).Score()
         else:
@@ -67,7 +67,7 @@ class AlphaBetaSearch:
         for act in act_list:
             move = [None]*state.num_players
             move[agent_id] = act
-            new_state, end = state.GetNextState(moves=move)
+            new_state, end = state.GetNextState(actions=move)
             if end:
                 value = new_state.GetPlayerState(agent_id).Score()
             else:
@@ -85,7 +85,7 @@ class AlphaBetaSearch:
         for act in act_list:
             move = [None] * state.num_players
             move[agent_id] = act
-            new_state, end = state.GetNextState(moves=move)
+            new_state, end = state.GetNextState(actions=move)
             if end:
                 value = new_state.GetPlayerState(agent_id).Score()
             else:
@@ -101,12 +101,11 @@ class AlphaBetaSearch:
     @classmethod
     def sampledAlternativeAction(cls, state: BoardState, agent_id, depth, beta = 5):
         act_value = []
-        player_state = state.GetPlayerState(agent_id)
-        act_list = player_state.AvailableActions(serialize=False)
+        act_list = state.AvailableActions(serialize=False,player_id=agent_id)
         for act in act_list:
             move = [None] * state.num_players
             move[agent_id] = act
-            new_state, end = state.GetNextState(moves=move)
+            new_state, end = state.GetNextState(actions=move,update_observation=False)
             #print(depth, end)
             for counter in range(depth * (1-end)):
                 #print(counter)
@@ -115,14 +114,14 @@ class AlphaBetaSearch:
                 new_move[c] = sampledGreedyActions(new_state,c,1,False,5)[0]
                 '''
                 if counter % 2 == 0:
-                    new_move[1-agent_id] = sampledAction(new_state,1-agent_id,1,False)
+                    new_move[1-agent_id] = sampledActions(new_state,1-agent_id,1,False)
                 else:
                     new_move[agent_id] = sampledGreedyActions(new_state,agent_id,1,False,beta=beta)
                 '''
-                end = new_state.GetNextState_(actions=new_move)
+                end = new_state.GetNextState_(actions=new_move,update_observation=False)
                 if end:
                     break
-            value = new_state.GetPlayerState(agent_id).Score() \
+            value = new_state.Score(player_id=agent_id) \
                     + act.IsEffectiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE \
                     + act.IsOffensiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE
             act_value.append(value)
@@ -135,27 +134,22 @@ class AlphaBetaSearch:
         return act
 
 
-def sampledAction(state, agent_index, number = 1, serialize = True):
-    player_state = state.GetPlayerState(agent_index)
-    act_lists = player_state.AvailableActions(serialize=False)
+def sampledActions(state, agent_index, number = 1, serialize = True):
+    act_lists = state.AvailableActions(serialize=False,player_id=agent_index)
     act_lists.append(PlayerAction((0, 0), (-1, 0), False))
     select = np.random.choice(a = len(act_lists),size = min(number,len(act_lists)),replace = False)
     acts = np.array(act_lists)[select].tolist()
     return acts[0].serializein(state) if serialize else acts
 
-
 def greedyActions(state, agent_index):
-    player_state = state.GetPlayerState(agent_index)
-    #pre_score = player_state.Score()
-    act_lists = player_state.AvailableActions(serialize=False)
+    act_lists = state.AvailableActions(serialize=False,player_id=agent_index)
     best_reward = -1e10
     best_act = 0
     for act in act_lists:
         move = [None] * state.num_players
         move[agent_index] = act
-        next_state, _ = state.GetNextState(moves=move)
-        next_player_state = next_state.GetPlayerState(agent_index)
-        score = next_player_state.Score()
+        next_state, _ = state.GetNextState(actions=move,update_observation=False)
+        score = next_state.Score(player_id=agent_index)
         reward = score \
                  + act.IsEffectiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE \
                  + act.IsOffensiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE
@@ -169,16 +163,13 @@ def greedyActions(state, agent_index):
 
 
 def sampledGreedyActions(state, agent_index, number = 1, serialize = True, beta = 5):
-    player_state = state.GetPlayerState(agent_index)
-    #pre_score = player_state.Score()
-    act_lists = player_state.AvailableActions(serialize=False)
+    act_lists = state.AvailableActions(serialize=False,player_id=agent_index)
     reward = []
     for act in act_lists:
         move = [None] * state.num_players
         move[agent_index] = act
-        next_state, _ = state.GetNextState(moves=move)
-        next_player_state = next_state.GetPlayerState(agent_index)
-        score = next_player_state.Score()
+        next_state, _ = state.GetNextState(actions=move,update_observation=False)
+        score = next_state.Score(player_id=agent_index)
         reward_ = score \
                  + act.IsEffectiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE \
                  + act.IsOffensiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE
@@ -188,7 +179,7 @@ def sampledGreedyActions(state, agent_index, number = 1, serialize = True, beta 
     reward.append(0.0)
     act_lists.append(PlayerAction((0, 0), (-1, 0), False))
     prob = softmax(torch.tensor(reward) * beta,dim = 0).tolist()
-    select = np.random.choice(a = len(act_lists),size = min(number,len(act_lists)),replace = False,p = prob)
+    select = np.random.choice(a = len(act_lists),size = min(number,len(act_lists)), replace = False, p = prob)
     acts = np.array(act_lists)[select].tolist()
     return acts[0].serializein(state) if serialize else acts
 
