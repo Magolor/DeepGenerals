@@ -74,6 +74,16 @@ class PlayerAction(object):
         and (state.arm[self.src[0]][self.src[1]]>1)                                             # have army to move
         )
 
+    def IsEffectiveIn(self, state, player_id=0):
+        return True
+        # return (
+        #     (self.IsAvailableIn(state, player_id))
+        # and (
+        #         (state.ctr[self.dst[0]][self.dst[1]]!=player_id+C.BOARD_SELF)
+        #     
+        # or )
+        # )
+
     def serializein(self, state):
         if self.dir_id == -1:
             return None
@@ -117,11 +127,13 @@ class PlayerState(object):
     def Score(self):
         W,H = self.board_shape
         reward = 0.
-        reward += self.ArmyControlled() * 25           # 25  * 0.5
+        reward += self.ArmyControlled() * 25            # 25  * 0.5
+        # reward += self.ArmyStd() * 25
+        reward += self.WeightedArmyControlled() * 25 * 0.5
         # reward += self.CapitalObserved() * 10           # 0                     
-        reward += self.CityControlled() * 5             # 5   * 1               
+        reward += self.CityControlled() * 50             # 5   * 1               
         # reward += self.CityObserved() * 1               # 1   * 1               
-        reward += self.LandControlled() * 50 / (W*H)    # 1                     
+        reward += self.LandControlled() * 500 / (W*H)    # 1                     
         # reward += self.LandObserved() * 5 / (W*H)       # 5   * 1/3
         #print(reward)
         #print(self.ArmyControlled(),self.CityControlled(),self.LandControlled())
@@ -154,6 +166,27 @@ class PlayerState(object):
     
     def ArmyControlled(self):
         return sum([self.arm[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])/float(sum(self.armies))
+
+    def ArmyStd(self):
+        total = self.ArmyControlled(); mean = 1/self.LandControlled()
+        return sum([(self.arm[i][j]/total-mean)**2 for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])*mean
+
+    def WeightedArmyControlled(self, iter=5):
+        border = np.logical_and(self.ctr!=C.BOARD_SELF, self.grd!=2).astype(np.float); weight = border.copy()
+        for _ in range(iter):
+            new_weight = weight.copy()
+            new_weight[:,:-1] += weight[:,1:]
+            new_weight[:,1:] += weight[:,:-1]
+            new_weight[:-1,:] += weight[1:,:]
+            new_weight[1:,:] += weight[:-1,:]
+            weight = np.clip(new_weight/5+border,0,1)
+        # print("============================")
+        # print(torch.tensor((weight * (self.grd!=2))))
+        # print(torch.tensor(self.arm))
+        # print(torch.tensor(self.arm/float(sum(self.armies)) * weight))
+        # print("============================")
+        # print(weight * self.arm/float(sum(self.armies)) * (self.ctr==C.BOARD_SELF))
+        return sum([self.arm[i][j]*weight[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])/float(sum(self.armies))
 
     def AvailableActions(self, serialize=True):
         available_actions = []

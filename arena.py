@@ -56,13 +56,13 @@ def evaluate_neural(pt_folder, round=23, start=1, device='cpu'):
     with Tracker(title=name,DIR=os.path.join(pt_folder,"evaluate"),registrations=registrations) as T:
         for epoch, agent_pt in TQDM(agent_pts[start-1:],s=start):
             #assert(agent_pt=="Epoch%05d.pt"%epoch);
-            agent = agents.PPOAgent(path=os.path.join(root,agent_pt),device=device)
+            agent = agents.NeuralAgent(path=os.path.join(root,agent_pt),device=device)
             for key, value in evaluate(agent, round):
                 T.update(key, value, epoch)
 
 if __name__=="__main__":
-    #exp_name = "PPO_First"
-    #evaluate_neural(os.path.join("Experiment",exp_name),start=3)
-    other = agents.MinimaxAgent()
-    human = agents.HumanAgent(cheat = True)
-    play([other,human])
+    # exp_name = "DG_Big"
+    # evaluate_neural(os.path.join("Experiment",exp_name),start=15)
+    # other = agents.MinimaxAgent()
+    # human = agents.HumanAgent(cheat = True)
+    play([agents.RandomGreedyAgent(beta=5),agents.HumanAgent(cheat=True)])
