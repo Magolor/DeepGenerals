@@ -11,3 +11,4 @@ out = model(x)
 print(out.size())
 
 
+from timm.models.swin_transformer import swin_base_patch4_window12_384_in22k

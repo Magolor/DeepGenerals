@@ -111,7 +111,7 @@ class AlphaBetaSearch:
                 #print(counter)
                 new_move = [None] * new_state.num_players
                 c = agent_id if counter&1 else 1-agent_id
-                new_move[c] = sampledGreedyActions(new_state,c,1,False,5)[0]
+                new_move[c] = sampledGreedyActions(new_state,c,1,False,beta)[0]
                 '''
                 if counter % 2 == 0:
                     new_move[1-agent_id] = sampledActions(new_state,1-agent_id,1,False)
@@ -122,8 +122,8 @@ class AlphaBetaSearch:
                 if end:
                     break
             value = new_state.Score(player_id=agent_id) \
-                    + act.IsEffectiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE \
-                    + act.IsOffensiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE
+                    + act.IsEffectiveIn(state) * C.ACTION_REWARD \
+                    + act.IsOffensiveIn(state) * C.ACTION_REWARD
             act_value.append(value)
 
         act_value.append(0.0)
@@ -151,8 +151,8 @@ def greedyActions(state, agent_index):
         next_state, _ = state.GetNextState(actions=move,update_observation=False)
         score = next_state.Score(player_id=agent_index)
         reward = score \
-                 + act.IsEffectiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE \
-                 + act.IsOffensiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE
+                 + act.IsEffectiveIn(state) * C.ACTION_REWARD \
+                 + act.IsOffensiveIn(state) * C.ACTION_REWARD
 
         if reward > best_reward:
             best_act = act.serializein(state)
@@ -171,8 +171,8 @@ def sampledGreedyActions(state, agent_index, number = 1, serialize = True, beta 
         next_state, _ = state.GetNextState(actions=move,update_observation=False)
         score = next_state.Score(player_id=agent_index)
         reward_ = score \
-                 + act.IsEffectiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE \
-                 + act.IsOffensiveIn(state) * C.ACTION_REWARD * C.REWARD_SCALE
+                 + act.IsEffectiveIn(state) * C.ACTION_REWARD \
+                 + act.IsOffensiveIn(state) * C.ACTION_REWARD
         reward.append(reward_)
         # print(f"best:{best_reward}")
         # print(f"score: {score, pre_score}")
