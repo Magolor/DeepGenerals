@@ -70,7 +70,6 @@ def train(cfg, utils):
     # save
     torch.save(policy, cfg.name+'.pt')
 
-
 def visualize(cfg, num_episodes = 5, model_path = None, random = False):
     with torch.no_grad():
         env = cfg.env()
@@ -107,7 +106,7 @@ if __name__ == '__main__':
     'CartPole', 'PettingZoo', 'Generals'
     '''
     name = 'Generals'
-    exp_name = 'PPO_First'
+    exp_name = 'PPO_Second'
     cfg = config.get_config(name, exp_name=exp_name)
     utils.init(exp_name, Path.cwd()/'Experiment')
     train(cfg, utils)
