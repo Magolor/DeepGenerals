@@ -17,8 +17,8 @@ class GeneralsMultiAgentEnv(gym.Env):
         Ws = [6], # [16,15,14,13,12],
         Hs = [5], # [16,15,14,13,12],
         num_players = 2,
-        p_mountain = 0.05,
-        p_city = 0.10,
+        p_mountain = 0.10,
+        p_city = 0.05,
         army_generator = UniformArmyGenerator(40,61),
         **kwargs
     ):
@@ -41,24 +41,13 @@ class GeneralsMultiAgentEnv(gym.Env):
         rewards = [
         (   (new_observations[i][-1].Score())
         -   (old_observations[i][-1].Score())
-        +   (actions[i].IsAvailableIn(old_observations[i][-1]) * 1 if actions[i] is not None else 0)
-        +   (actions[i].IsEffectiveIn(old_observations[i][-1]) * 1 if actions[i] is not None else 0)
-        +   (actions[i].IsOffensiveIn(old_observations[i][-1]) * 1 if actions[i] is not None else 0)
+        +   (actions[i].IsAvailableIn(old_observations[i][-1]) * C.ACTION_REWARD if actions[i] is not None else 0)
+        +   (actions[i].IsEffectiveIn(old_observations[i][-1]) * C.ACTION_REWARD if actions[i] is not None else 0)
+        +   (actions[i].IsOffensiveIn(old_observations[i][-1]) * C.ACTION_REWARD if actions[i] is not None else 0)
         -   (C.TIME_PUNISHMENT * C.REWARD_SCALE)
         -   (force_done * 0.1 * C.REWARD_SCALE))
         for i in range(self.num_players)
         ]
-        print(
-            "***",
-            rewards[0],
-            new_observations[0][-1].Score(),
-        -   old_observations[0][-1].Score(),
-        +   actions[0].IsAvailableIn(old_observations[0][-1]) * 1 if actions[0] is not None else 0,
-        +   actions[0].IsEffectiveIn(old_observations[0][-1]) * 1 if actions[0] is not None else 0,
-        +   actions[0].IsOffensiveIn(old_observations[0][-1]) * 1 if actions[0] is not None else 0,
-        -   C.TIME_PUNISHMENT * C.REWARD_SCALE,
-        -   force_done * 0.1 * C.REWARD_SCALE,
-        )
         done = done or force_done
         self.step_result = (new_observations, rewards, done, {'god':[self.state.GetPlayerState(i) for i in range(self.num_players)],
                                                               'board':[self.state]*self.state.num_players})
