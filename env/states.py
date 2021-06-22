@@ -174,12 +174,8 @@ class PlayerState(object):
     def WeightedArmyControlled(self, iter=5):
         border = np.logical_and(self.ctr!=C.BOARD_SELF, self.grd!=2).astype(np.float); weight = border.copy()
         for _ in range(iter):
-            new_weight = weight.copy()
-            new_weight[:,:-1] += weight[:,1:]
-            new_weight[:,1:] += weight[:,:-1]
-            new_weight[:-1,:] += weight[1:,:]
-            new_weight[1:,:] += weight[:-1,:]
-            weight = np.clip(new_weight/5+border,0,1)
+            pad_weight = np.pad(weight, ((1,1),(1,1)), mode='constant')
+            weight = np.clip((pad_weight[:-2,1:-1]+pad_weight[2:,1:-1]+pad_weight[1:-1,:-2]+pad_weight[1:-1,2:])/4+border,0,1)
         # print("============================")
         # print(torch.tensor((weight * (self.grd!=2))))
         # print(torch.tensor(self.arm))
