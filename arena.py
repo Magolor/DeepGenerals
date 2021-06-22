@@ -65,4 +65,4 @@ if __name__=="__main__":
     # evaluate_neural(os.path.join("Experiment",exp_name),start=15)
     # other = agents.MinimaxAgent()
     # human = agents.HumanAgent(cheat = True)
-    play([agents.MinimaxAgent(),agents.HumanAgent(cheat=True)])
+    play([agents.MinimaxAgent(depth=3,beta=5),agents.HumanAgent(cheat=True)])
