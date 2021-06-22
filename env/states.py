@@ -177,7 +177,7 @@ class State(object):
         # return sum([ for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])*mean
 
     @numba.jit(fastmath=True,parallel=True,forceobj=True)
-    def WeightedArmyControlled(self, player_id=0, iter=5):
+    def WeightedArmyControlled(self, player_id=0, iter=3):
         border = np.logical_and(self.ctr!=C.BOARD_SELF+player_id, self.grd!=2).astype(np.float); pad_weight = np.pad(border, ((1,1),(1,1)), mode='constant')
         for _ in range(iter):
             pad_weight[1:-1,1:-1] = np.clip((pad_weight[:-2,1:-1]+pad_weight[2:,1:-1]+pad_weight[1:-1,:-2]+pad_weight[1:-1,2:]+pad_weight[1:-1,1:-1])/5+border*0.25-(self.grd==2),0,1)
