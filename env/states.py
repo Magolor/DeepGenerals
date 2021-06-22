@@ -149,7 +149,7 @@ class PlayerState(object):
         #print(reward)
         #print(self.ArmyControlled(),self.CityControlled(),self.LandControlled())
         #print(W,H)
-        return reward * C.REWARD_SCALE
+        return reward
 
     @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CityControlled(self):
