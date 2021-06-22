@@ -1,5 +1,6 @@
 import sys
 import gym
+import numba
 from numpy.lib.arraysetops import isin
 from utils import *
 
@@ -140,37 +141,48 @@ class PlayerState(object):
         #print(W,H)
         return reward * C.REWARD_SCALE
 
+    @numba.jit(fastmath=True,parallel=True)
     def CityControlled(self):
         return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.ctr[i][j]==C.BOARD_SELF) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
+    @numba.jit(fastmath=True,parallel=True)
     def CityObserved(self):
         return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
+    @numba.jit(fastmath=True,parallel=True)
     def CityObserving(self):
         return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
-    
+
+    @numba.jit(fastmath=True,parallel=True)
     def LandControlled(self):
         return sum([(self.ctr[i][j]==C.BOARD_SELF) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
+    @numba.jit(fastmath=True,parallel=True)
     def LandObserved(self):
         return sum([(self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
-    
+
+    @numba.jit(fastmath=True,parallel=True)
     def LandObserving(self):
         return sum([(self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
+    @numba.jit(fastmath=True,parallel=True)
     def CapitalObserved(self):
         return sum([(self.grd[i][j]==C.LAND_CAPITAL and self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
         
+    @numba.jit(fastmath=True,parallel=True)
     def CapitalObserving(self):
         return sum([(self.grd[i][j]==C.LAND_CAPITAL and self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
-    
+
+    @numba.jit(fastmath=True,parallel=True)
     def ArmyControlled(self):
         return sum([self.arm[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])/float(sum(self.armies))
 
+    @numba.jit(fastmath=True,parallel=True)
     def ArmyStd(self):
         total = self.ArmyControlled(); mean = 1/self.LandControlled()
         return sum([(self.arm[i][j]/total-mean)**2 for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])*mean
 
+    @numba.jit(fastmath=True,parallel=True)
     def WeightedArmyControlled(self, iter=5):
         border = np.logical_and(self.ctr!=C.BOARD_SELF, self.grd!=2).astype(np.float); weight = border.copy()
         for _ in range(iter):
