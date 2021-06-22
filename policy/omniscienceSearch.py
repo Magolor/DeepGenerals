@@ -10,15 +10,16 @@ from tool import Timer
 
 class AlphaBetaSearch:
     iter = 0
-    max_actions = 3
+    max_actions = 1
     timer = Timer()
     @classmethod
     def maxValue(cls, currentDepth, state,agent_id, depth, truncated=True):
         cls.iter +=1
+        #print(cls.iter)
         if cls.iter%10000 ==0:
             print(cls.iter)
         if currentDepth == depth:
-            return state.GetPlayerState(agent_id).Score() - state.GetPlayerState(1-agent_id).Score()
+            return state.GetPlayerState(agent_id).Score()
         value = -1e9
         if truncated:
             act_list = sampledGreedyActions(state,agent_id,number=cls.max_actions,serialize=False)
@@ -32,31 +33,26 @@ class AlphaBetaSearch:
             move[agent_id] = act
             new_state, end = state.GetNextState(moves=move)
             if end:
-                value = new_state.GetPlayerState(agent_id).Score()-new_state.GetPlayerState(1-agent_id).Score()
+                value = new_state.GetPlayerState(agent_id).Score()
             else:
                 value = -cls.randomValue(currentDepth+1, new_state, 1 - agent_id,depth)
+
         return value
 
     @classmethod
     def randomValue(cls, currentDepth, state, agent_id, depth, truncated=True):
-        cls.iter += 1
-        if cls.iter % 10000 == 0:
-            print(cls.iter)
         if currentDepth == depth:
-            return state.GetPlayerState(agent_id).Score() - state.GetPlayerState(1 - agent_id).Score()
-        value = -1e9
-
+            return state.GetPlayerState(agent_id).Score()
         player_state = state.GetPlayerState(agent_id)
         act_list = player_state.AvailableActions(serialize=False)
         act_list.append(PlayerAction((0, 0), (-1, 0), False))
 
-        act = np.random.choice(act_list,size = 1,replace = False)
-
+        act = act_list[np.random.randint(len(act_list))]
         move = [None] * state.num_players
         move[agent_id] = act
         new_state, end = state.GetNextState(moves=move)
         if end:
-            value = new_state.GetPlayerState(agent_id).Score() - new_state.GetPlayerState(1 - agent_id).Score()
+            value = new_state.GetPlayerState(agent_id).Score()
         else:
             value = -cls.maxValue(currentDepth + 1, new_state, 1 - agent_id, depth)
         return value
@@ -72,7 +68,7 @@ class AlphaBetaSearch:
             move[agent_id] = act
             new_state, end = state.GetNextState(moves=move)
             if end:
-                value = new_state.GetPlayerState(agent_id).Score()-new_state.GetPlayerState(1-agent_id).Score()
+                value = new_state.GetPlayerState(agent_id).Score()
             else:
                 value = -cls.maxValue(-1e9, -best, 0, new_state,1-agent_id, depth,truncated)
             if value > best:
@@ -91,9 +87,9 @@ class AlphaBetaSearch:
             move[agent_id] = act
             new_state, end = state.GetNextState(moves=move)
             if end:
-                value = new_state.GetPlayerState(agent_id).Score() - new_state.GetPlayerState(1-agent_id).Score()
+                value = new_state.GetPlayerState(agent_id).Score()
             else:
-                value = -cls.maxValue(0, new_state, 1-agent_id, depth,truncated)
+                value = -cls.randomValue(0, new_state, 1-agent_id, depth,truncated)
             act_value.append(value)
         prob = softmax(torch.tensor(act_value) * beta, dim=0).tolist()
         select = np.random.choice(a=len(act_list), size=1, replace=False, p=prob).item()
