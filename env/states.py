@@ -76,14 +76,20 @@ class PlayerAction(object):
         )
 
     def IsEffectiveIn(self, state, player_id=0):
-        return True
-        # return (
-        #     (self.IsAvailableIn(state, player_id))
-        # and (
-        #         (state.ctr[self.dst[0]][self.dst[1]]!=player_id+C.BOARD_SELF)
-        #     
-        # or )
-        # )
+        army = state.arm[self.src[0]][self.src[1]]-int(np.ceil(state.arm[self.src[0]][self.src[1]]/2.) if self.half else 1)
+        return (
+            (self.IsAvailableIn(state, player_id))
+        and (state.ctr[self.dst[0]][self.dst[1]]!=player_id+C.BOARD_SELF)
+        and (army > state.arm[self.dst[0]][self.dst[1]])
+        )
+    
+    def IsOffensiveIn(self, state, player_id=0):
+        army = state.arm[self.src[0]][self.src[1]]-int(np.ceil(state.arm[self.src[0]][self.src[1]]/2.) if self.half else 1)
+        return (
+            (self.IsAvailableIn(state, player_id))
+        and (state.ctr[self.dst[0]][self.dst[1]]!=player_id+C.BOARD_SELF and state.ctr[self.dst[0]][self.dst[1]]>=C.BOARD_SELF)
+        and (army > state.arm[self.dst[0]][self.dst[1]])
+        )
 
     def serializein(self, state):
         if self.dir_id == -1:
@@ -129,65 +135,69 @@ class PlayerState(object):
         W,H = self.board_shape
         reward = 0.
         reward += self.ArmyControlled() * 25            # 25  * 0.5
-        # reward += self.ArmyStd() * 25
-        reward += self.WeightedArmyControlled() * 25 * 0.5
+        # reward += self.ArmyStd() * 50
+        reward += self.WeightedArmyControlled() * 125
         # reward += self.CapitalObserved() * 10           # 0                     
         reward += self.CityControlled() * 50             # 5   * 1               
         # reward += self.CityObserved() * 1               # 1   * 1               
-        reward += self.LandControlled() * 500 / (W*H)    # 1                     
+        reward += self.LandControlled() * 100 / (W*H)    # 1                     
         # reward += self.LandObserved() * 5 / (W*H)       # 5   * 1/3
         #print(reward)
         #print(self.ArmyControlled(),self.CityControlled(),self.LandControlled())
         #print(W,H)
+        print(
+            reward, self.ArmyControlled() * 25, self.ArmyStd() * 50, self.WeightedArmyControlled() * 125, self.CityControlled() * 50, self.LandControlled() * 100 / (W*H)
+        )
         return reward * C.REWARD_SCALE
 
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CityControlled(self):
         return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.ctr[i][j]==C.BOARD_SELF) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CityObserved(self):
         return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CityObserving(self):
         return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def LandControlled(self):
         return sum([(self.ctr[i][j]==C.BOARD_SELF) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def LandObserved(self):
         return sum([(self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def LandObserving(self):
         return sum([(self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CapitalObserved(self):
         return sum([(self.grd[i][j]==C.LAND_CAPITAL and self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
         
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def CapitalObserving(self):
         return sum([(self.grd[i][j]==C.LAND_CAPITAL and self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def ArmyControlled(self):
         return sum([self.arm[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])/float(sum(self.armies))
 
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def ArmyStd(self):
-        total = self.ArmyControlled(); mean = 1/self.LandControlled()
+        total = sum([self.arm[i][j] for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF]); mean = 1/self.LandControlled()
         return sum([(self.arm[i][j]/total-mean)**2 for i in range(self.board_shape[0]) for j in range(self.board_shape[1]) if self.ctr[i][j]==C.BOARD_SELF])*mean
 
-    @numba.jit(fastmath=True,parallel=True)
+    @numba.jit(fastmath=True,parallel=True,forceobj=True)
     def WeightedArmyControlled(self, iter=5):
         border = np.logical_and(self.ctr!=C.BOARD_SELF, self.grd!=2).astype(np.float); weight = border.copy()
         for _ in range(iter):
             pad_weight = np.pad(weight, ((1,1),(1,1)), mode='constant')
-            weight = np.clip((pad_weight[:-2,1:-1]+pad_weight[2:,1:-1]+pad_weight[1:-1,:-2]+pad_weight[1:-1,2:])/4+border-(self.grd==2),0,1)
+            weight = np.clip((pad_weight[:-2,1:-1]+pad_weight[2:,1:-1]+pad_weight[1:-1,:-2]+pad_weight[1:-1,2:]+pad_weight[1:-1,1:-1])/5+border*0.5-(self.grd==2),0,1)
+        weight = np.clip((pad_weight[:-2,1:-1]+pad_weight[2:,1:-1]+pad_weight[1:-1,:-2]+pad_weight[1:-1,2:]+pad_weight[1:-1,1:-1])/5-(self.grd==2),0,1)
         # print("============================")
         # print(torch.tensor((weight * (self.grd!=2))))
         # print(torch.tensor(self.arm))
