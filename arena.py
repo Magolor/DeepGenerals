@@ -61,5 +61,8 @@ def evaluate_neural(pt_folder, round=23, start=1, device='cpu'):
                 T.update(key, value, epoch)
 
 if __name__=="__main__":
-    exp_name = "PPO_First"
-    evaluate_neural(os.path.join("Experiment",exp_name),start=3)
+    #exp_name = "PPO_First"
+    #evaluate_neural(os.path.join("Experiment",exp_name),start=3)
+    other = agents.MinimaxAgent()
+    human = agents.HumanAgent(cheat = True)
+    play([other,human])

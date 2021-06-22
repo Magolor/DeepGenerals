@@ -31,7 +31,7 @@ def get_ppo_policy(cfg, input_shape, action_space, name = 'CartPole'):
                                  lr=1e-6, weight_decay=5e-5)
 
         def single_policy(actor, critic, optim):
-            policy = ts.policy.PPOPolicy(actor,critic, optim, dist_fn=lambda logits:Categorical(logits=logits))
+            policy = ts.policy.PPOPolicy(actor,critic, optim, dist_fn=lambda logits:Categorical(logits=torch.clip(logits,max=50)))
             return policy
             # multiagent
 

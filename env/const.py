@@ -30,6 +30,6 @@ class C:
     # NN utils
     FEATURES = 16
     NUM_FRAME = 8
-    MAX_TURN = 1000
+    MAX_TURN = 300
     REWARD_SCALE = 1
     TIME_PUNISHMENT = 1e-4

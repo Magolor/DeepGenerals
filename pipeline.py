@@ -12,7 +12,19 @@ import tqdm
 from pathlib import Path
 from diytrainer import offpolicy_trainer
 
-
+def get_save_fn(algo, dir):
+    if algo == 'dqn':
+        return lambda policy, name: torch.save(policy,dir/name)
+    elif algo == 'ppo':
+        def save(policy, name):
+            dir_name = name.split('.')[0]
+            if not (dir/dir_name).exists():
+                (dir/dir_name).mkdir()
+            torch.save(policy.policies[0].actor,dir/dir_name/('actor_'+name))
+            torch.save(policy.policies[0].critic,dir/dir_name/('critic_'+name))
+        return save
+    else:
+        return lambda policy, name: None
 
 def train(cfg, utils):
     # get environment
@@ -48,9 +60,9 @@ def train(cfg, utils):
         episode_per_test=cfg.episode_per_test,
         batch_size=cfg.batch_size,
         update_per_step=cfg.update_per_step,
-        train_fn=ExplorationRateDecayPolicy(policy, cfg.max_epoch,cfg.step_per_epoch,mile_stones=(2,10,80,120),rates=(0.9,0.5,0.25,0.1,0.05)),
+        train_fn=ExplorationRateDecayPolicy(policy, cfg.max_epoch,cfg.step_per_epoch,mile_stones=(0.05,0.1,0.4,0.7),rates=(0.9,0.5,0.25,0.1,0.05)),
         test_fn=ExplorationRateDecayPolicy(policy, cfg.max_epoch,cfg.step_per_epoch,mile_stones=(),rates=(0.005,)),
-        save_fn=lambda policy,name: torch.save(policy,utils.get_fs().get_checkpoint_dirpath()/name),
+        save_fn=get_save_fn(cfg.algo, utils.get_fs().get_checkpoint_dirpath())
     )
     utils.log(result)
     #with open(utils.get_fs().get_root_path()/'data.json', 'w') as f:
@@ -95,7 +107,7 @@ if __name__ == '__main__':
     'CartPole', 'PettingZoo', 'Generals'
     '''
     name = 'Generals'
-    exp_name = 'DG_Big'
+    exp_name = 'PPO_First'
     cfg = config.get_config(name, exp_name=exp_name)
     utils.init(exp_name, Path.cwd()/'Experiment')
     train(cfg, utils)

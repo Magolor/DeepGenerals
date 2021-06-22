@@ -24,7 +24,7 @@ class ExplorationRateDecayPolicy():
     '''
     def __init__(self, policy, max_epoch, step_per_epoch, mile_stones = (0.05,0.5), rates = (0.2,0.1,0.05)):
         self.policy = policy
-        self.total = max_epoch + step_per_epoch
+        self.total = max_epoch * step_per_epoch
         self.mile__stones = mile_stones
         self.rates = rates
 

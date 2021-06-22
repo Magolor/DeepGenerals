@@ -26,5 +26,5 @@ class NeuralAgent(BaseAgent):
         act_list = obs.board.GetPlayerState(self.agent_id).AvailableActions(serialize=True)
         mask = [(i in act_list) for i in range(np.prod(obs.board.board_shape)*8)]
         logit = raw_out.logits.cpu() * torch.tensor(mask,dtype=torch.float)
-        act = torch.argmax(logit,dim = 1).cpu().numpy()
+        act = torch.argmax(logit,dim = 1).cpu().detach().numpy()
         return act[0]
