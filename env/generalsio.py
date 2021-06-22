@@ -39,13 +39,14 @@ class GeneralsMultiAgentEnv(gym.Env):
         done = self.state.GetNextState_(actions); self.history.append(self.state.copy()); force_done = (len(self.history)>C.NUM_FRAME+C.MAX_TURN) and (not done)
         new_observations = [[h.GetPlayerState(i) for h in self.history[-C.NUM_FRAME:]] for i in range(self.num_players)]
         rewards = [
-        (   (new_observations[i][-1].Score() * C.REWARD_SCALE)
+        min((new_observations[i][-1].Score() * C.REWARD_SCALE)
         -   (old_observations[i][-1].Score() * C.REWARD_SCALE)
         +   (actions[i].IsAvailableIn(old_observations[i][-1]) * C.ACTION_REWARD * C.REWARD_SCALE if actions[i] is not None else 0)
         +   (actions[i].IsEffectiveIn(old_observations[i][-1]) * C.ACTION_REWARD * C.REWARD_SCALE if actions[i] is not None else 0)
         +   (actions[i].IsOffensiveIn(old_observations[i][-1]) * C.ACTION_REWARD * C.REWARD_SCALE if actions[i] is not None else 0)
         -   (C.TIME_PUNISHMENT * C.REWARD_SCALE)
-        -   (force_done * 0.1 * C.REWARD_SCALE))
+        -   (force_done * 0.1 * C.REWARD_SCALE)
+        ,    75)
         for i in range(self.num_players)
         ]
         done = done or force_done
