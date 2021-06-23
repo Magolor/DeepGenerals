@@ -180,8 +180,7 @@ class Painter():
         plt.savefig(self.FILE); plt.close()
 
 class Tracker():
-    def __init__(self, title, DIR, registrations=None):
-        registrations = list() if registrations is None else registrations
+    def __init__(self, title, DIR, registrations=[]):
         self.title = title; self.DIR=DIR; Create(DIR); self.curve = {}; self.xlabel = {}; self.key = {}
         self.data_file = os.path.join(self.DIR, "%s.dat"%self.title)
         for key in registrations:
@@ -195,9 +194,8 @@ class Tracker():
             return None
         return b
     def variable_profile(self, variable):
-        values = self.curve[variable]
-        key = self.compare_func(self.key[variable])
-        return values[np.argmax([key(x[1]) for x in values])][1]
+        values = self.curve[variable]; key = self.compare_func(self.key[variable])
+        return values[np.argmax([key(x[1]) for x in values])][1] if len(values) else None
     def profile(self):
         profile = {}
         for variable in self.curve.keys():
@@ -218,8 +216,11 @@ class Tracker():
                 values = sorted(values); X,Y = [v[0] for v in values], [v[1] for v in values]
                 with Painter("%s: %s"%(self.title,variable), os.path.join(self.DIR,"%s.png"%variable)) as (fig,axe):
                     plt.plot(X, Y); plt.xlabel(self.xlabel[variable]); plt.ylabel(variable)
+    def serialize(self):
+        SaveJSON(self.curve,os.path.join(self.DIR,"metrics.log"),indent=4)
+        SaveJSON(self.profile(),os.path.join(self.DIR,"profile.log"),indent=4)
     def save(self):
-        torch.save(self.__dict__, self.data_file); self.plot()
+        torch.save(self.__dict__, self.data_file); self.plot(); self.serialize()
     def __enter__(self):
         return self
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -227,3 +228,17 @@ class Tracker():
 
 def LoadTracker(title, DIR):
     T = Tracker(title,DIR); T.load(); T.save(); return T
+
+def MeanTracker(title, DIR, trackers):
+    T = Tracker(title,DIR)
+    if len(trackers)==0:
+        T.save(); return T
+    else:
+        T.xlabel = dict(trackers[0].xlabel); T.key = dict(trackers[0].key)
+        T.curve = {variable:[] for variable in trackers[0].curve.keys()}
+        for variable in T.curve.keys():
+            for i in range(min([len(tracker.curve[variable]) for tracker in trackers])):
+                T.curve[variable].append((trackers[0].curve[variable][i][0],float(np.mean([
+                    tracker.curve[variable][i][1] for tracker in trackers
+                ]))))
+        T.save(); return T
