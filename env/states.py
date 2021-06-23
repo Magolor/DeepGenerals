@@ -123,7 +123,7 @@ class State(object):
         reward += self.WeightedArmyControlled(player_id=player_id) * 100      
         reward += self.CityControlled(player_id=player_id) * 50
         reward += self.LandControlled(player_id=player_id) * 5
-        reward += 300 * (self.ArmyControlled(player_id=player_id)>1-1e-3)
+        reward += 300 * (self.ArmyControlled(player_id=player_id)>1-1e-6)
         return reward
 
     @numba.jit(fastmath=True,parallel=True,forceobj=True)
