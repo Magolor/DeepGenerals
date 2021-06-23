@@ -8,6 +8,7 @@ class NeuralAgent(BaseAgent):
         super(NeuralAgent, self).__init__()
         path = kwargs.pop('path')
         device = kwargs.pop('device')
+        self.beta = kwargs.pop('beta') if 'beta' in kwargs else 5
         self.dqn = torch.load(path, device).policies[0]
 
     def get_action(self, obs, **info):
@@ -26,5 +27,6 @@ class NeuralAgent(BaseAgent):
         act_list = obs.board.GetPlayerState(self.agent_id).AvailableActions(serialize=True)
         mask = [(i in act_list) for i in range(np.prod(obs.board.board_shape)*8)]
         logit = raw_out.logits.cpu() * torch.tensor(mask,dtype=torch.float)
-        act = torch.argmax(logit,dim = 1).cpu().detach().numpy()
-        return act[0]
+        dis = torch.distributions.Categorical(logits=logit * self.beta)
+        act = dis.sample((1,))[0].item()
+        return act
