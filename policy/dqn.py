@@ -40,7 +40,8 @@ def get_dqn_policy(cfg, input_shape, action_space, name = 'CartPole'):
             return policy
             # multiagent
         policy = MultiAgentPolicyManager(
-            [single_policy(net, optim) for _ in range(cfg.num_agents)]
+            [single_policy(net, optim) for _ in range(cfg.num_agents)],
+            off_policy = "Minimax",
             #[single_policy(net, optim) for _ in range(cfg.num_agents - 1)]+ [OmniscienceSearch()]
         )
     return policy

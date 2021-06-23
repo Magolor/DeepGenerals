@@ -5,7 +5,7 @@ from typing import Any, Dict, List, Tuple, Union, Optional
 from tianshou.policy import BasePolicy
 from tianshou.data import Batch, ReplayBuffer, VectorReplayBuffer
 from copy import deepcopy
-from policy.omniscienceSearch import OmniscienceSearch, sampledGreedyActions
+from policy.omniscienceSearch import OmniscienceSearch, AlphaBetaSearch, sampledActions, greedyActions, sampledGreedyActions
 
 #class SMAReplayBuffer(ReplayBuffer):
 #	def __init__(self, agent_id):
@@ -28,6 +28,7 @@ class MultiAgentPolicyManager(BasePolicy):
     """
 
     def __init__(self, policies: List[BasePolicy], **kwargs: Any) -> None:
+        self.off_policy = kwargs.pop('off_policy') if 'off_policy' in kwargs else "Random"
         super().__init__(**kwargs)
         self.policies = policies
         for i, policy in enumerate(policies):
@@ -36,6 +37,7 @@ class MultiAgentPolicyManager(BasePolicy):
             policy.set_agent_id(i + 1)
             if hasattr(policy, 'set_eps'):
                 policy.set_eps(0)
+        assert(self.off_policy in ['Random','DeterminedGreedy','RandomGreedy','Minimax'])
         self.rate = 0
 
     def set_eps(self, rate):
@@ -175,30 +177,23 @@ class MultiAgentPolicyManager(BasePolicy):
                                 state = None)
                 # explore
                 else:
-                    if np.random.rand()>1:
-                        for b, g in enumerate(god):
-                            act_lists = g.AvailableActions(serialize=True)
-                            act_lists.append(0)
-                            act = np.random.choice(act_lists)
-                            logit = torch.zeros(size = (np.prod(g.board_shape)*8,), dtype = torch.float)
-                            logit[act] = 1
-                            acts.append(act)
-                            logits.append(logit)
-                            out = Batch(act = np.array(acts),
-                                        logits = torch.stack(logits,dim=0),
-                                        state = None)
-                    else:
-                        for board, g in zip(tmp_batch.board, god):
-                            act_lists = g.AvailableActions(serialize=True)
-                            act_lists.append(0)
-                            act = sampledGreedyActions(board,agent_index,beta=2)
-                            logit = torch.zeros(size=(np.prod(g.board_shape) * 8,), dtype=torch.float)
-                            logit[act] = 1
-                            acts.append(act)
-                            logits.append(logit)
-                            out = Batch(act=np.array(acts),
-                                        logits=torch.stack(logits, dim=0),
-                                        state=None)
+                    EXPLORATION_ACTION = {
+                        'Random': sampledActions,
+                        'DeterminedGreedy': greedyActions,
+                        'RandomGreedy': sampledGreedyActions,
+                        'Minimax': AlphaBetaSearch.sampledAlternativeAction,
+                    }
+                    for board, g in zip(tmp_batch.board, god):
+                        act_lists = g.AvailableActions(serialize=True)
+                        act_lists.append(0)
+                        act = EXPLORATION_ACTION[self.off_policy](board,agent_index)
+                        logit = torch.zeros(size=(np.prod(g.board_shape) * 8,), dtype=torch.float)
+                        logit[act] = 1
+                        acts.append(act)
+                        logits.append(logit)
+                        out = Batch(act=np.array(acts),
+                                    logits=torch.stack(logits, dim=0),
+                                    state=None)
             act = out.act
             each_state = out.state \
                 if (hasattr(out, "state") and out.state is not None) \

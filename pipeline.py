@@ -106,7 +106,7 @@ if __name__ == '__main__':
     'CartPole', 'PettingZoo', 'Generals'
     '''
     name = 'Generals'
-    exp_name = 'DQN_Second'
+    exp_name = 'DQN_Minimax6_new'
     cfg = config.get_config(name, exp_name=exp_name)
     utils.init(exp_name, Path.cwd()/'Experiment')
     train(cfg, utils)

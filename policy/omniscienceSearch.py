@@ -99,7 +99,7 @@ class AlphaBetaSearch:
         return act
 
     @classmethod
-    def sampledAlternativeAction(cls, state: BoardState, agent_id, depth, beta = 5):
+    def sampledAlternativeAction(cls, state: BoardState, agent_id, depth = 6, beta = 5):
         act_value = []
         act_list = state.AvailableActions(serialize=False,player_id=agent_id)
         for act in act_list:

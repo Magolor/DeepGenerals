@@ -68,7 +68,7 @@ class PlayerAction(object):
         self.dir_id = -1 if dir not in C.MOVEABLE_DIRECTIONS else C.MOVEABLE_DIRECTIONS_ID[dir]
         self.src = src; self.dir = dir; self.dst = (src[0]+dir[0],src[1]+dir[1]); self.half = half
 
-    ##@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #
     def IsAvailableIn(self, state, player_id=0):
         return (
             (0<=self.dst[0]<state.board_shape[0] and 0<=self.dst[1]<state.board_shape[1])       # in the board
@@ -77,7 +77,7 @@ class PlayerAction(object):
         and (state.arm[self.src[0]][self.src[1]]>1)                                             # have army to move
         )
 
-    ##@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #
     def IsEffectiveIn(self, state, player_id=0):
         army = state.arm[self.src[0]][self.src[1]]-int(np.ceil(state.arm[self.src[0]][self.src[1]]/2.) if self.half else 1)
         return (
@@ -86,7 +86,7 @@ class PlayerAction(object):
         and (army > state.arm[self.dst[0]][self.dst[1]])
         )
 
-    ##@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    #
     def IsOffensiveIn(self, state, player_id=0):
         army = state.arm[self.src[0]][self.src[1]]-int(np.ceil(state.arm[self.src[0]][self.src[1]]/2.) if self.half else 1)
         return (
@@ -123,7 +123,7 @@ class State(object):
         reward += self.WeightedArmyControlled(player_id=player_id) * 100      
         reward += self.CityControlled(player_id=player_id) * 50
         reward += self.LandControlled(player_id=player_id) * 5
-        reward += 300 * (self.ArmyControlled(player_id=player_id)>1-1e-3)
+        reward += 300 * (self.ArmyControlled(player_id=player_id)>1-1e-6)
         return reward
 
     @numba.jit(fastmath=True,parallel=True,forceobj=True)
@@ -131,12 +131,12 @@ class State(object):
         return np.logical_and(C.HAS_HOUSE_BATCH(self.grd),self.ctr==C.BOARD_SELF+player_id).sum()
         # return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.ctr[i][j]==C.BOARD_SELF) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    
     # def CityObserved(self):
     #     return np.logical_and(C.HAS_HOUSE_BATCH(self.grd),self.obs!=C.UNOBSERVED).sum()
     #     # return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    
     # def CityObserving(self):
     #     return np.logical_and(C.HAS_HOUSE_BATCH(self.grd),self.obs==C.OBSERVING).sum()
     #     # return sum([(C.HAS_HOUSE(self.grd[i][j]) and self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
@@ -146,22 +146,22 @@ class State(object):
         return (self.ctr==C.BOARD_SELF+player_id).sum()
         # return sum([(self.ctr[i][j]==C.BOARD_SELF) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    
     # def LandObserved(self):
     #     return (self.obs!=C.UNOBSERVED).sum()
     #     # return sum([(self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
 
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    
     # def LandObserving(self):
     #     return (self.obs==C.OBSERVING).sum()
     #     # return sum([(self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
     
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    
     # def CapitalObserved(self):
     #     return np.logical_and(self.grd==C.LAND_CAPITAL,self.obs!=C.UNOBSERVED).sum()
     #     # return sum([(self.grd[i][j]==C.LAND_CAPITAL and self.obs[i][j]!=C.UNOBSERVED) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
         
-    #@numba.jit(fastmath=True,parallel=True,forceobj=True)
+    
     # def CapitalObserving(self):
     #     return np.logical_and(self.grd==C.LAND_CAPITAL,self.obs==C.OBSERVED).sum()
     #     # return sum([(self.grd[i][j]==C.LAND_CAPITAL and self.obs[i][j]==C.OBSERVING) for i in range(self.board_shape[0]) for j in range(self.board_shape[1])])
